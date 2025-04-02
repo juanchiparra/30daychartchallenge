@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<title>Fractions</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="treemap.css" rel="stylesheet">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+	<main>
+		<section class="header">
+			<h1>Fractions</h1>
+			<span class="date">April 01, 2025</span>
+		</section>
+		<section class="visualization">
+			<h2>Causes of death worldwide <span>(2021)</span></h2>
+			<p class="description">Every year, millions of people die from various causes, mainly
+				diseases and accidents. In 2021, <b>COVID-19</b> became one of the leading causes of death, while other
+				causes remained consistent with their percentages from previous years.
+			</p>
+			<div class="legend-items">
+				<div class="legend-item">
+					<span class="legend-color" style="background-color: #731a46;"></span>
+					Non-communicable diseases
+				</div>
+				<div class="legend-item">
+					<span class="legend-color" style="background-color: #c17ba0;"></span>
+					Communicable diseases
+				</div>
+				<div class="legend-item">
+					<span class="legend-color" style="background-color: #d5a6bd;"></span>
+					Injuries
+				</div>
+				<div class="legend-item">
+					<span class="legend-color" style="background-color: #d9d9d9;"></span>
+					Others
+				</div>
+			</div>
+			<div id="container1" class="container">
+			</div>
+			<div class="footer">
+				<p><b>Data:</b> <a href="https://vizhub.healthdata.org/gbd-results/" class="external">Global Health
+						Data Exchange</a> by IHME</p>
+				<p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a>
+			</div>
+		</section>
+	</main>
+	<script type="module">
+		// Access data
+		import { data } from './treemap.js';
+
+		// Add formatting
+		const formatPercent = d => d < 10 ? d3.format(".1f")(d) : d3.format(".0f")(d);
+		const formatValue = d3.format(",d");
+
+		// Create chart dimensions
+		const width = 1200;
+		const height = 700;
+
+		// Draw canvas
+		const wrapper_treemap = d3.select("#container1")
+			.append("svg")
+			.attr("viewBox", "0 0 1200 700")
+			.attr("preserveAspectRatio", "xMidYMid meet");
+
+		const colorScale = d3.scaleOrdinal()
+			.domain(["Non-communicable diseases", "Communicable diseases", "Injuries", "Others"])
+			.range(["#731a46", "#c17ba0", "#d5a6bd", "#d9d9d9"]);
+
+		// Create scales
+		const treemap = d3.treemap()
+			.size([width, height])
+			.padding(1)
+			.tile(d3.treemapBinary);
+
+		const root = d3.hierarchy(data)
+			.sum(d => d.value)
+			.sort((a, b) => a.value - a.value);
+
+		treemap(root);
+
+		const cell = wrapper_treemap
+			.selectAll("g")
+			.data(root.leaves())
+			.join("g")
+			.attr("transform", d => `translate(${d.x0},${d.y0})`);
+
+		// Draw data
+		const rect = cell.append("rect")
+			.attr("width", d => d.x1 - d.x0)
+			.attr("height", d => d.y1 - d.y0)
+			.attr("fill", d => colorScale(d.parent.data.name))
+			.attr("stroke", "white")
+			.attr("stroke-width", 1.5);
+
+		// Add labels
+		const text = cell.append("text")
+			.attr("x", 6)
+			.attr("y", 13);
+
+		text.each(function (d) {
+			const lines = d.data.name.split("\n");
+			const textElement = d3.select(this);
+
+			lines.forEach((line, i) => {
+				textElement.append("tspan")
+					.attr("x", 6)
+					.attr("dy", i === 0 ? (d.data.percent < 4 ? 10 : 14) : (d.data.percent < 4 ? 18 : 22))
+					.text(line)
+					.attr("fill", d => d.parent.data.name === "Non-communicable diseases" ? "#f1f1f1" : "#531333")
+					.style("font-size", d => d.data.percent < 4 ? "15.75px" : "20px")
+					.style("font-weight", d => d.parent.data.name === "Non-communicable diseases" ? "300" : "400")
+			});
+
+			textElement.append("tspan")
+				.text(`${formatPercent(d.data.percent)}%`)
+				.attr("x", 6)
+				.attr("dy", lines.length > 1 ? (d.data.percent < 4 ? 20 : 24) : (d.data.percent < 4 ? 20 : 24))
+				.attr("fill", d => d.parent.data.name === "Non-communicable diseases" ? "#f1f1f1" : "#531333")
+				.style("font-size", d => d.data.percent < 4 ? "16px" : "20px")
+				.style("font-weight", "bold")
+
+
+			textElement.append("tspan")
+				.text(formatValue(d.data.value))
+				.attr("x", 6)
+				.attr("y", d => d.y1 - d.y0 - 10)
+				.attr("fill", d => d.parent.data.name === "Non-communicable diseases" ? "#f1f1f1" : "#531333")
+				.style("font-size", d => d.data.percent < 4 ? "13px" : "15px");
+
+		});
+	</script>
+
+</html>
