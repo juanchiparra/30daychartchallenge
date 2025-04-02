@@ -1,0 +1,152 @@
+/* Base */
+:root {
+    font-family: 'Inter', 'Avenir', system-ui, -apple-system, Helvetica, Arial, sans-serif;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    background-color: #fdfdfd;
+    color: #232323;
+}
+
+main {
+    padding: 20px;
+}
+
+.header {
+    width: 100%;
+    max-width: 650px;
+    margin: 30px auto;
+    padding: 0px auto;
+}
+
+.visualization {
+    width: 100%;
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0px auto;
+}
+
+.header span {
+    display: block;
+    text-align: center;
+}
+
+h1 {
+    font-size: 48px;
+    margin-top: 40px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-weight: bold;
+    text-align: center;
+}
+
+h2 {
+    font-size: 38px;
+    margin: 10px 0;
+    font-weight: 700;
+}
+
+h2 span {
+    font-size: 32px;
+    font-weight: 400;
+}
+
+.description {
+    font-size: 19px;
+    margin: 0;
+}
+
+.external {
+    color: #161618;
+    text-decoration: none;
+    text-decoration-style: dotted;
+    text-decoration-thickness: 1px;
+}
+
+.external:hover {
+    text-decoration: none;
+}
+
+.footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.footer p {
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+/* Treemap */
+tspan {
+    pointer-events: none;
+}
+
+.legend-items {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.legend-color {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    margin-right: 10px;
+    border: 1px solid #000;
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2em;
+    }
+
+    h2 {
+        font-size: 1.2em;
+    }
+
+    .header span {
+        font-size: 1em;
+    }
+
+    .description {
+        font-size: 1em;
+    }
+
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5em;
+    }
+
+    h2 {
+        font-size: 1em;
+    }
+
+
+    .header span {
+        font-size: 0.9em;
+    }
+
+    .description {
+        font-size: 0.9em;
+    }
+}
