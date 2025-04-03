@@ -10,3 +10,5 @@ For more information about the challenge, you can visit the [official repository
 ### Day 1
 ![Challenge 01](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V01/treemap.png)
 
+### Day 2
+![Challenge 02](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V02/slope.png)
