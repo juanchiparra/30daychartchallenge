@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<title>Slope</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="slope.css" rel="stylesheet">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+	<main>
+		<section class="header">
+			<h1>Slope Chart</h1>
+			<span class="date">April 02, 2025</span>
+		</section>
+		<section class="visualization">
+			<h2>The impact of COVID-19 on the causes of deaths <span class="date">(2021)</span></h2>
+			<p class="description">The pandemic had a significant impact on deaths caused by <span>respiratory
+					infections and
+					tuberculosis</span>.There was an increase of up to
+				<span>7,483,310 deaths</span> between 2019 and 2021.
+			</p>
+			<div id="container1" class="container"></div>
+			<div class="footer">
+				<p><b>Data:</b> <a href="https://vizhub.healthdata.org/gbd-results/" class="external">Global Health
+						Data Exchange</a> by IHME</p>
+				<p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a>
+			</div>
+		</section>
+	</main>
+	<script type="module">
+		// Access data
+		import { data } from './slope.js';
+
+		// Create chart dimensions
+		const width = 900;
+		const height = 600;
+		const margin = { top: 50, right: 200, bottom: 50, left: 200 };
+
+		const innerWidth = width - margin.left - margin.right;
+		const innerHeight = height - margin.top - margin.bottom;
+
+		// Draw canvas
+		const wrapper_slope = d3.select("#container1")
+			.append("svg")
+			.attr("viewBox", `0 0 ${width} ${height}`)
+			.attr("preserveAspectRatio", "xMidYMid meet");
+
+		const bounds_slope = wrapper_slope.append("g")
+			.attr("transform", `translate(${margin.left},${margin.top})`);
+
+		// Create scales
+		const xScale = d3.scalePoint()
+			.domain(["2019", "2021"])
+			.range([0, innerWidth]);
+
+		const yScale = d3.scaleLinear()
+			.domain([0, d3.max(data, d => Math.max(d.percent, d.percent2) + 1)])
+			.range([innerHeight, 0]);
+
+		const colorScale = d3.scaleOrdinal()
+			.domain(data.map(d => d.name))
+			.range(data.map(d => d.name === "Respiratory infections and tuberculosis" ? "#49112d" : "#c583a3"));
+
+		// Draw peripherals
+		bounds_slope.append("line")
+			.attr("x1", xScale("2019"))
+			.attr("x2", xScale("2019"))
+			.attr("y1", 0)
+			.attr("y2", innerHeight)
+			.attr("stroke", "#731a46")
+			.attr("stroke-width", 2);
+
+		bounds_slope.append("line")
+			.attr("x1", xScale("2021"))
+			.attr("x2", xScale("2021"))
+			.attr("y1", 0)
+			.attr("y2", innerHeight)
+			.attr("stroke", "#731a46")
+			.attr("stroke-width", 2);
+		bounds_slope.selectAll(".label2019")
+			.data(data)
+			.join("text")
+			.attr("x", xScale("2019") - 10)
+			.attr("y", d => yScale(d.percent2) + 5)
+			.attr("text-anchor", "end")
+			.text(d => `${d.percent2}%`)
+			.style("font-size", "12px")
+			.style("font-weight", d => d.name === "Respiratory infections and tuberculosis" ? "bold" : "normal")
+			.style("fill", d => colorScale(d.name));
+
+		bounds_slope.selectAll(".label2021")
+			.data(data)
+			.join("text")
+			.attr("x", xScale("2021") + 10)
+			.attr("y", d => yScale(d.percent) + 3)
+			.attr("text-anchor", "start")
+			.text(d => `${d.percent}%`)
+			.style("font-size", "12px")
+			.style("font-weight", d => d.name === "Respiratory infections and tuberculosis" ? "bold" : "normal")
+			.style("fill", d => colorScale(d.name));
+
+		bounds_slope.selectAll(".lineLabel")
+			.data(data)
+			.join("text")
+			.attr("x", d => (xScale("2019") + xScale("2021")) / 2)
+			.attr("y", d => {
+				const midpointY = (yScale(d.percent2) + yScale(d.percent)) / 2;
+				return d.name === "Digestive diseases" ? midpointY + 14 : midpointY - 5;
+			})
+			.attr("text-anchor", "middle")
+			.text(d => d.name)
+			.style("font-size", "13px")
+			.style("fill", d => colorScale(d.name))
+			.attr("transform", d => {
+				const x1 = xScale("2019");
+				const y1 = yScale(d.percent2);
+				const x2 = xScale("2021");
+				const y2 = yScale(d.percent);
+				const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+				return `rotate(${angle}, ${(x1 + x2) / 2}, ${(y1 + y2) / 2})`;
+			});
+
+		bounds_slope.append("text")
+			.attr("x", xScale("2019"))
+			.attr("y", -10)
+			.attr("text-anchor", "middle")
+			.text("2019")
+			.style("font-size", "14px")
+			.style("font-weight", "700")
+			.style("fill", "#731a46");
+
+		bounds_slope.append("text")
+			.attr("x", xScale("2021"))
+			.attr("y", -10)
+			.attr("text-anchor", "middle")
+			.text("2021")
+			.style("font-size", "14px")
+			.style("font-weight", "700")
+			.style("fill", "#731a46");
+
+		bounds_slope.append("line")
+			.attr("x1", xScale("2019") - 10)
+			.attr("x2", xScale("2019") + 10)
+			.attr("y1", 0)
+			.attr("y2", 0)
+			.attr("stroke", "#731a46")
+			.attr("stroke-width", 2);
+
+		bounds_slope.append("line")
+			.attr("x1", xScale("2019") - 10)
+			.attr("x2", xScale("2019") + 10)
+			.attr("y1", innerHeight)
+			.attr("y2", innerHeight)
+			.attr("stroke", "#731a46")
+			.attr("stroke-width", 2);
+
+		bounds_slope.append("line")
+			.attr("x1", xScale("2021") - 10)
+			.attr("x2", xScale("2021") + 10)
+			.attr("y1", 0)
+			.attr("y2", 0)
+			.attr("stroke", "#731a46")
+			.attr("stroke-width", 2);
+
+		bounds_slope.append("line")
+			.attr("x1", xScale("2021") - 10)
+			.attr("x2", xScale("2021") + 10)
+			.attr("y1", innerHeight)
+			.attr("y2", innerHeight)
+			.attr("stroke", "#731a46")
+			.attr("stroke-width", 2);
+
+		// Draw data
+		bounds_slope.selectAll(".line")
+			.data(data)
+			.join("line")
+			.attr("x1", xScale("2019"))
+			.attr("y1", d => yScale(d.percent2))
+			.attr("x2", xScale("2021"))
+			.attr("y2", d => yScale(d.percent))
+			.attr("stroke", d => colorScale(d.name))
+			.attr("stroke-width", 2);
+
+		bounds_slope.selectAll("circle-2019")
+			.data(data)
+			.join("circle")
+			.attr("cx", xScale("2019"))
+			.attr("cy", d => yScale(d.percent2))
+			.attr("r", 5)
+			.attr("fill", d => colorScale(d.name));
+
+		bounds_slope.selectAll("circle-2021")
+			.data(data)
+			.join("circle")
+			.attr("cx", xScale("2021"))
+			.attr("cy", d => yScale(d.percent))
+			.attr("r", 5)
+			.attr("fill", d => colorScale(d.name));
+	</script>
+
+</html>
