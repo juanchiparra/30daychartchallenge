@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<title>Circular</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="clustered.css" rel="stylesheet">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+	<main>
+		<section class="header">
+			<h1>Clustered Force Layout</h1>
+			<span class="date">April 03, 2025</span>
+		</section>
+		<section class="visualization">
+			<h2>The countries with the highest military expenditure <span class="date">(2023)</span></h2>
+			<p class="description">Every year, countries increase their military spending. In 2023, a total of 2.4 trillion US dollars was spent worldwide, with over 50% of this expenditure attributed to just three countries: United States, China, and Russia.</p>
+			<div id="container1" class="container"></div>
+			<div class="footer">
+				<p><b>Data:</b> <a href="https://www.sipri.org/databases/milex" class="external">SIPRI</a></p>
+				<p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a></p>
+			</div>
+		</section>
+	</main>
+	<script type="module">
+		// Access data
+		import { data } from './clustered.js';
+
+		// Add formatting
+		const formatvalue = d => d > 100 ? "$" + d3.format(",.0f")(d) + " B" : "$" + d3.format(",.1f")(d) + " B";
+
+		// Create chart dimensions
+		const width = 1200;
+		const height = 790;
+
+		// Draw canvas
+		const wrapper_clustered = d3.select("#container1")
+			.append("svg")
+			.attr("viewBox", `0 0 ${width} ${height}`)
+			.attr("preserveAspectRatio", "xMidYMid meet");
+
+		// Create scales
+		const colorScale = d3.scaleOrdinal()
+			.domain([...new Set(data.map(d => d.continent))])
+			.range(["#486e3f", "#689f5b", "#653f6e", "#925b9f", "#32292F"]);
+
+		const sizeScale = d3.scaleSqrt()
+			.domain([d3.min(data, d => d.value), d3.max(data, d => d.value)])
+			.range([10, 200]);
+
+		const simulation = d3.forceSimulation(data)
+			.force("x", d3.forceX(width / 2).strength(0.2))
+			.force("y", d3.forceY(height / 2).strength(0.2))
+			.force("collide", d3.forceCollide(d => sizeScale(d.value) + 0.2))
+			.on("tick", ticked);
+
+		// Draw legend
+		const legend = wrapper_clustered.append("g")
+			.attr("class", "legend")
+			.attr("transform", `translate(0, 10)`);
+
+		const legendItems = [...new Set(data.map(d => d.continent))];
+
+		let currentX = 0;
+
+		const legendGroups = legend.selectAll("g.legend-item")
+			.data(legendItems)
+			.enter()
+			.append("g");
+
+		legendGroups.append("circle")
+			.attr("cx", 10)
+			.attr("cy", 10)
+			.attr("r", 10)
+			.attr("fill", d => colorScale(d));
+
+		legendGroups.append("text")
+			.attr("x", 30)
+			.attr("y", 15)
+			.style("font-size", "16px")
+			.style("fill", "#000")
+			.text(d => d);
+
+		legendGroups.each(function () {
+			const group = d3.select(this);
+			const bbox = this.getBBox();
+			group.attr("transform", `translate(${currentX}, 0)`);
+			currentX += bbox.width + 20;
+		});
+
+		const legendWidth = currentX;
+
+		legend.attr("transform", `translate(${(width - legendWidth) / 2}, 20)`);
+
+		// Draw data
+		const nodes = wrapper_clustered.append("g")
+			.attr("class", "nodes")
+			.selectAll("circle.node")
+			.data(data)
+			.enter()
+			.append("circle")
+			.attr("class", "node")
+			.attr("r", d => sizeScale(d.value))
+			.attr("fill", d => colorScale(d.continent))
+			.attr("stroke", "white")
+			.attr("stroke-width", 1.5);
+
+		// Draw peripherals
+		const labels = wrapper_clustered.selectAll("label")
+			.data(data.filter(d => d.value >= 12))
+			.enter()
+			.append("text")
+			.attr("class", "label")
+			.attr("text-anchor", "middle")
+			.style("font-size", d =>
+				d.value >= 200 ? "48px" :
+					d.value >= 100 ? "32px" :
+						d.value >= 75 ? "26px" :
+							d.value >= 50 ? "24px" :
+								d.value >= 25 ? "18px" :
+									d.value >= 15 ? "14px" : "11px")
+			.style("font-weight", "600")
+			.style("fill", "#fff")
+			.style("dominant-baseline", "middle")
+			.text(d => d.code);
+
+		const valueLabels = wrapper_clustered.selectAll("text.value")
+			.data(data.filter(d => d.value >= 12))
+			.enter()
+			.append("text")
+			.attr("class", "value")
+			.attr("text-anchor", "middle")
+			.style("font-size", d =>
+				d.value >= 200 ? "24px" :
+					d.value >= 100 ? "18px" :
+						d.value >= 75 ? "16px" :
+							d.value >= 50 ? "14px" :
+								d.value >= 25 ? "12px" :
+									d.value >= 15 ? "11px" : "10px")
+			.style("font-weight", "300")
+			.style("fill", "#fff")
+			.style("dominant-baseline", "middle")
+			.attr("dy", d =>
+				d.value >= 200 ? "0.6em" :
+					d.value >= 100 ? "0.4em" :
+						d.value >= 75 ? "0.1em" :
+							d.value >= 50 ? "0em" :
+								d.value >= 25 ? "-0.1em" : "-0.6em")
+			.text(d => formatvalue(d.value));
+
+		function ticked() {
+			nodes.attr("cx", d => d.x)
+				.attr("cy", d => d.y);
+
+			labels.attr("x", d => d.x)
+				.attr("y", d => d.y - 10);
+
+			valueLabels.attr("x", d => d.x)
+				.attr("y", d => d.y + 10);
+		}
+	</script>
+
+</html>
