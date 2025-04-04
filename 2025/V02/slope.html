@@ -17,9 +17,9 @@
 		</section>
 		<section class="visualization">
 			<h2>The impact of COVID-19 on the causes of deaths <span class="date">(2021)</span></h2>
-			<p class="description">The pandemic had a significant impact on deaths caused by <span>respiratory
+			<p class="description">The pandemic had a significant impact on worldwide deaths caused by <span>respiratory
 					infections and
-					tuberculosis</span>.There was an increase of up to
+					tuberculosis</span>. There was an increase of up to
 				<span>7,483,310 deaths</span> between 2019 and 2021.
 			</p>
 			<div id="container1" class="container"></div>
@@ -62,7 +62,7 @@
 
 		const colorScale = d3.scaleOrdinal()
 			.domain(data.map(d => d.name))
-			.range(data.map(d => d.name === "Respiratory infections and tuberculosis" ? "#49112d" : "#c583a3"));
+			.range(data.map(d => d.name === "Respiratory infections and tuberculosis" ? "#49112d" : "#bd7296"));
 
 		// Draw peripherals
 		bounds_slope.append("line")
