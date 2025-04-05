@@ -14,4 +14,7 @@ For more information about the challenge, you can visit the [official repository
 ![Challenge 02](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V02/slope.png)
 
 ### Day 3
-![Challenge 02](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V03/clustered.png)
+![Challenge 03](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V03/clustered.png)
+
+### Day 4
+![Challenge 04](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V04/proportional.png)
