@@ -18,3 +18,6 @@ For more information about the challenge, you can visit the [official repository
 
 ### Day 4
 ![Challenge 04](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V04/proportional.png)
+
+### Day 5
+![Challenge 05](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V05/bar.png)
