@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<title>Ranking</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="bar.css" rel="stylesheet">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+	<main>
+		<section class="header">
+			<h1>Ranking</h1>
+			<span class="date">April 05, 2025</span>
+		</section>
+		<section class="visualization">
+			<h2>Where violence strikes: <span class="title">the states with the highest number of mass shootings in the
+					United States</span></h2>
+			<p class="description">According to data from The Violence Project, from <span class="highlighted">1966 to
+					2024,</span> there have been 200
+				mass shootings in the United States, taking the lives of more than 1438 people. <span
+					class="highlighted">60%</span> of all mass
+				shootings are concentrated in the ten states with the highest number of incidents.
+			</p>
+			<div id="container1" class="container"></div>
+			<div class="footer">
+				<p><b>Data:</b> <a href="https://www.theviolenceproject.org/mass-shooter-database/" class="external">The
+						Violence Project</a>
+				</p>
+				<p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a></p>
+			</div>
+		</section>
+	</main>
+	<script type="module">
+		// Access data
+		import { data } from './bar.js';
+
+		// Chart dimensions
+		const margin = { top: 20, right: 30, bottom: 40, left: 140 };
+		const width = 1200 - margin.left - margin.right;
+		const height = 700 - margin.top - margin.bottom;
+
+		// Draw canvas
+		const wrapper_bar = d3.select("#container1")
+			.append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", `translate(${margin.left},${margin.top})`);
+
+		// Create scales
+		const y = d3.scaleBand()
+			.domain(data.map(d => d.state))
+			.range([0, height])
+			.padding(0.2);
+
+		const x = d3.scaleLinear()
+			.domain([0, 30])
+			.range([0, width]);
+
+		// Draw data
+		wrapper_bar.selectAll(".bar")
+			.data(data)
+			.enter()
+			.append("rect")
+			.attr("class", "bar")
+			.attr("y", d => y(d.state))
+			.attr("x", 60)
+			.attr("height", y.bandwidth())
+			.attr("width", d => x(d.score) - 180)
+			.attr("fill", "#fdfdfd");
+
+		wrapper_bar.selectAll(".start")
+			.data(data)
+			.enter()
+			.append("image")
+			.attr("class", "svg")
+			.attr("xlink:href", "bullet.svg")
+			.attr("x", d => x(d.score) - 176)
+			.attr("y", d => y(d.state) + y.bandwidth() / 2 - 91)
+			.attr("width", 182)
+			.attr("height", 182);
+
+		wrapper_bar.selectAll(".end")
+			.data(data)
+			.enter()
+			.append("image")
+			.attr("class", "svg")
+			.attr("xlink:href", "bullet.svg")
+			.attr("x", -20)
+			.attr("y", d => y(d.state) + y.bandwidth() / 2 - 90)
+			.attr("width", 180)
+			.attr("height", 180);
+
+		// Draw peripherals
+		wrapper_bar.append("g")
+			.call(d3.axisLeft(y).tickSize(0))
+			.selectAll("text")
+			.style("font-size", "18px")
+			.style("font-weight", "600");
+
+		wrapper_bar.select(".domain").remove();
+
+		wrapper_bar.selectAll(".label")
+			.data(data)
+			.enter()
+			.append("text")
+			.attr("class", "label")
+			.attr("x", d => x(d.score) - 80)
+			.attr("y", d => y(d.state) + y.bandwidth() / 2 + 6)
+			.attr("text-anchor", "end")
+			.style("font-size", "18px")
+			.style("font-weight", "700")
+			.style("fill", "#232323")
+			.text(d => d.score);
+	</script>
+</body>
+
+</html>
