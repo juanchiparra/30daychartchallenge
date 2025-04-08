@@ -1,0 +1,21 @@
+export const data = [
+    { country: "Argentina", value: 229.8 },
+    { country: "Bolivia", value: 4.3 },
+    { country: "Brazil", value: 4.3 },
+    { country: "Chile", value: 3.9 },
+    { country: "Colombia", value: 6.7 },
+    { country: "Costa Rica", value: -0.3 },
+    { country: "Dominican Republic", value: 3.4 },
+    { country: "Ecuador", value: 1.9 },
+    { country: "El Salvador", value: 1 },
+    { country: "Guatemala", value: 3.6 },
+    { country: "Haiti", value: 26 },
+    { country: "Honduras", value: 4.6 },
+    { country: "Mexico", value: 4.7 },
+    { country: "Nicaragua", value: 5 },
+    { country: "Panama", value: 1.3 },
+    { country: "Paraguay", value: 3.8 },
+    { country: "Peru", value: 2.5 },
+    { country: "Uruguay", value: 4.9 },
+    { country: "Venezuela", value: 59.6 }
+].sort((a, b) => b.value - a.value);
