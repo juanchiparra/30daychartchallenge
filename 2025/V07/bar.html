@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<title>Outliers</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="bar.css" rel="stylesheet">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+	<main>
+		<section class="header">
+			<h1>Outliers</h1>
+			<span class="date">April 07, 2025</span>
+		</section>
+		<section class="visualization">
+			<h2>Fight against inflation:<span class="title"> these were the percentages at the end of 2024  for Latin America</span></h2>
+			<div id="container1" class="container"></div>
+			<div class="footer">
+				<p><b>Data:</b> <a href="https://www.imf.org/" class="external">IMF</a></p>
+				<p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a></p>
+			</div>
+		</section>
+	</main>
+	<script type="module">
+		// Access data
+		import { data } from './bar.js';
+
+		// Chart dimensions
+		const margin = { top: 20, right: 40, bottom: 40, left: 100 };
+		const width = 1100 - margin.left - margin.right;
+		const height = 500 - margin.top - margin.bottom;
+
+		// Draw canvas
+		const wrapper_bar = d3.select("#container1")
+			.append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", `translate(${margin.left},${margin.top})`);
+
+		// Create scales
+		const xScale = d3.scaleLinear()
+			.domain([Math.min(d3.min(data, d => d.value), -40), d3.max(data, d => d.value)])
+			.range([0, width]);
+
+		const yScale = d3.scaleBand()
+			.domain(data.map(d => d.country))
+			.range([0, height])
+			.padding(0.1);
+
+		// Draw peripherals
+		wrapper_bar.append("g")
+			.attr("transform", `translate(0, 0)`)
+			.call(d3.axisTop(xScale).ticks(width / 80))
+			.call(g => g.selectAll(".tick line").clone()
+				.attr("y2", height)
+				.attr("stroke", "#888")
+				.attr("stroke-opacity", 0.1))
+			.call(g => g.selectAll(".tick text")
+				.style("fill", "#ccc"))
+			.attr("stroke-opacity", 0.1)
+			.call(g => g.select(".domain").remove());
+
+		wrapper_bar.append("g")
+			.attr("transform", `translate(${xScale(0)},0)`)
+			.call(d3.axisLeft(yScale)
+				.tickSize(0)
+				.tickPadding(6))
+			.call(g => {
+				g.selectAll(".tick text")
+					.attr("x", d => {
+						const value = data.find(item => item.country === d).value;
+						return value < 0 ? 10 : -10;
+					})
+					.style("text-anchor", d => {
+						const value = data.find(item => item.country === d).value;
+						return value < 0 ? "start" : "end";
+					});
+			});
+
+		wrapper_bar.selectAll(".label")
+			.data(data)
+			.join("text")
+			.attr("class", "label")
+			.attr("x", d => d.value >= 0 ? xScale(d.value) + 5 : xScale(d.value) - 5)
+			.attr("y", d => yScale(d.country) + yScale.bandwidth() / 2)
+			.attr("dy", "0.35em")
+			.style("text-anchor", d => d.value >= 0 ? "start" : "end")
+			.style("font-size", "10px")
+			.style("font-weight", "500")
+			.style("fill", "#232323")
+			.text(d => `${d.value}%`);
+
+		// Draw data
+		wrapper_bar.selectAll(".bar")
+			.data(data)
+			.join("rect")
+			.attr("class", "bar")
+			.attr("y", d => yScale(d.country))
+			.attr("height", yScale.bandwidth())
+			.attr("x", d => xScale(Math.min(0, d.value)))
+			.attr("width", d => Math.abs(xScale(d.value) - xScale(0)))
+			.attr("fill", d => d.value >= 0 ? "#ad2e45" : "#aabf67");
+	</script>
+</body>
+
+</html>
