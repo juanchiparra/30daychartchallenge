@@ -1,0 +1,22 @@
+export const data = [
+    { year: "< 1", rate_male: 25.6, rate_female: 21.6, count_male: 78, count_female: 63 },
+    { year: "1-4", rate_male: 21.7, rate_female: 17.7, count_male: 274, count_female: 213 },
+    { year: "5-9", rate_male: 12.5, rate_female: 9.6, count_male: 214, count_female: 157 },
+    { year: "10-14", rate_male: 15.1, rate_female: 10.7, count_male: 270, count_female: 182 },
+    { year: "15-19", rate_male: 19.9, rate_female: 21.2, count_male: 338, count_female: 340 },
+    { year: "20-24", rate_male: 29, rate_female: 32.9, count_male: 504, count_female: 558 },
+    { year: "25-29", rate_male: 46.1, rate_female: 60.8, count_male: 847, count_female: 1146 },
+    { year: "30-34", rate_male: 60.5, rate_female: 110.6, count_male: 1169, count_female: 2276 },
+    { year: "35-39", rate_male: 90.7, rate_female: 181.4, count_male: 1693, count_female: 3617 },
+    { year: "40-44", rate_male: 140.6, rate_female: 271.4, count_male: 2528, count_female: 5124 },
+    { year: "45-49", rate_male: 218.9, rate_female: 406.6, count_male: 3752, count_female: 7178 },
+    { year: "50-54", rate_male: 411.8, rate_female: 606.3, count_male: 7828, count_female: 11917 },
+    { year: "55-59", rate_male: 748.7, rate_female: 774.9, count_male: 14170, count_female: 15197 },
+    { year: "60-64", rate_male: 1215.3, rate_female: 1004.7, count_male: 20193, count_female: 17276 },
+    { year: "65-69", rate_male: 1880.6, rate_female: 1314.6, count_male: 25807, count_female: 19108 },
+    { year: "70-74", rate_male: 2466.4, rate_female: 1537.7, count_male: 31180, count_female: 21428 },
+    { year: "75-79", rate_male: 2930.8, rate_female: 1861, count_male: 31190, count_female: 22696 },
+    { year: "80-84", rate_male: 3185.9, rate_female: 2181.7, count_male: 20210, count_female: 17526 },
+    { year: "85-89", rate_male: 3452.1, rate_female: 2295.6, count_male: 12698, count_female: 12321 },
+    { year: "90+", rate_male: 3470.9, rate_female: 2008.5, count_male: 5934, count_female: 7017 }
+];
