@@ -21,3 +21,10 @@ For more information about the challenge, you can visit the [official repository
 
 ### Day 5
 ![Challenge 05](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V05/bar.png)
+
+### Day 6
+![Challenge 06](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V06/radial.png)
+
+### Day 7
+![Challenge 07](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V07/bar.png)
+
