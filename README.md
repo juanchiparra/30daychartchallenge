@@ -28,3 +28,5 @@ For more information about the challenge, you can visit the [official repository
 ### Day 7
 ![Challenge 07](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V07/bar.png)
 
+### Day 8
+![Challenge 08](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V08/histogram.png)
