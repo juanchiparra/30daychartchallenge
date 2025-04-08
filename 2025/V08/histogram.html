@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<title>Histogram</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="histogram.css" rel="stylesheet">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+	<main>
+		<section class="header">
+			<h1>Histogram</h1>
+			<span class="date">April 08, 2025</span>
+		</section>
+		<section class="visualization">
+			<h2>Almost 1,000 new cancer diagnoses per day in England</h2>
+			<p class="description">According to the National Health Service, there were 346,217 new cancer diagnoses in
+				England in 2022, which is 16,553 more than in 2021. Prostate, breast, lung, and bowel cancers remain the
+				four most common types.</p>
+			<div id="container1" class="container"></div>
+			<div class="footer">
+				<p><b>Data:</b> <a
+						href="https://digital.nhs.uk/data-and-information/publications/statistical/cancer-registration-statistics/england-2022#"
+						class="external">NHS</a></p>
+				<p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a></p>
+			</div>
+		</section>
+	</main>
+	<script type="module">
+		// Access data
+		import { data } from './histogram.js';
+
+		// Chart dimensions
+		const margin = { top: 60, right: 40, bottom: 60, left: 90 };
+		const width = 1200 - margin.left - margin.right;
+		const height = 740 - margin.top - margin.bottom;
+
+		// Draw canvas
+		const wrapper_histogram = d3.select("#container1")
+			.append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", `translate(${margin.left},${margin.top})`);
+
+		// Add legend
+		const legend = wrapper_histogram.append("g")
+			.attr("class", "legend")
+			.attr("transform", `translate(${width / 2 - 140}, -40)`);
+
+		const legendData = [
+			{ label: "Men", color: "#65daca" },
+			{ label: "Women", color: "#b666f9" }
+		];
+
+		legend.selectAll("rect")
+			.data(legendData)
+			.enter()
+			.append("rect")
+			.attr("x", (d, i) => i * 100)
+			.attr("y", 0)
+			.attr("width", 20)
+			.attr("height", 20)
+			.attr("fill", d => d.color)
+			.attr("stroke", "#232323")
+			.attr("stroke-width", 1)
+			.attr("alignment-baseline", "middle");
+
+		legend.selectAll("text")
+			.data(legendData)
+			.enter()
+			.append("text")
+			.attr("x", (d, i) => i * 100 + 30)
+			.attr("y", 12)
+			.text(d => d.label)
+			.attr("font-size", "18px")
+			.attr("fill", "#232323")
+			.attr("alignment-baseline", "middle");
+
+		// Create scales
+		const xScale = d3.scaleBand()
+			.domain(data.map(d => d.year))
+			.range([0, width])
+			.padding(0.01);
+
+		const yScale = d3.scaleLinear()
+			.domain([0, d3.max(data, d => Math.max(d.count_male, d.count_female))])
+			.range([height, 0]);
+
+		// Draw peripherals
+		wrapper_histogram.append("g")
+			.attr("transform", `translate(0,${height})`)
+			.attr("class", "axis-x")
+			.call(d3.axisBottom(xScale))
+			.selectAll("text")
+
+
+		wrapper_histogram.append("g")
+			.attr("class", "axis-y")
+			.call(d3.axisLeft(yScale).ticks(5))
+			.selectAll("text")
+
+		wrapper_histogram.append("text")
+			.attr("class", "x-axis-label")
+			.attr("x", width / 2)
+			.attr("y", height + 40)
+			.attr("text-anchor", "middle")
+			.text("Age groups")
+			.attr("font-size", "13px")
+			.attr("fill", "#23232");
+
+		wrapper_histogram.append("text")
+			.attr("class", "y-axis-label")
+			.attr("x", -height / 2)
+			.attr("y", -70)
+			.attr("text-anchor", "middle")
+			.attr("transform", "rotate(-90)")
+			.text("Number of diagnostics")
+			.attr("font-size", "13px")
+			.attr("fill", "#232323");
+
+		// Draw data
+		wrapper_histogram.selectAll(".male")
+			.data(data)
+			.enter()
+			.append("rect")
+			.attr("class", "male")
+			.attr("x", d => xScale(d.year))
+			.attr("y", d => yScale(d.count_male))
+			.attr("width", xScale.bandwidth())
+			.attr("height", d => height - yScale(d.count_male))
+			.attr("fill", "#65daca")
+			.attr("stroke", "#232323")
+			.attr("stroke-width", 1);
+
+		wrapper_histogram.selectAll(".female")
+			.data(data)
+			.enter()
+			.append("rect")
+			.attr("class", "female")
+			.attr("x", d => xScale(d.year))
+			.attr("y", d => yScale(d.count_female))
+			.attr("width", xScale.bandwidth())
+			.attr("height", d => height - yScale(d.count_female))
+			.attr("fill", "#b666f9")
+			.attr("stroke", "#232323")
+			.attr("stroke-width", 1);
+	</script>
+</body>
+
+</html>
