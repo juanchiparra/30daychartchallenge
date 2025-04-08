@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<title>Nightingale</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="radial.css" rel="stylesheet">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+	<main>
+		<section class="header">
+			<h1>Nightingale</h1>
+			<span class="date">April 06, 2025</span>
+		</section>
+		<section class="visualization">
+			<h2>The world is on fire</h2>
+			<p class="description">Every year, wildfires are becoming more frequent, resulting in significant
+				consequences for the environment and human life. Among those affected,
+				<span
+					style="background-color: #e8a315; color: #fdfdfd; padding: 0px 4px; border-radius: 2px; font-weight: 500;">injuries</span>
+				and
+				<span
+					style="background-color: #e83a15; color: #fdfdfd; padding: 0px 4px; border-radius: 2px; font-weight: 500;">deaths</span>
+				are
+				particularly notable.
+			</p>
+			<div id="container1" class="container"></div>
+			<div class="footer">
+				<p><b>Data:</b> <a href="https://public.emdat.be/" class="external">EM-DAT</a>
+				</p>
+				<p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a></p>
+			</div>
+		</section>
+	</main>
+	<script type="module">
+		// Access data
+		import { data } from './radial.js';
+
+		// Chart dimensions
+		const margin = { top: 0, right: 30, bottom: 0, left: 30 };
+		const width = 1200 - margin.left - margin.right;
+		const height = 700 - margin.top - margin.bottom;
+		const innerRadius = 6;
+		const outerRadius = Math.min(width, height) / 2 - 50;
+
+		// Draw canvas
+		const wrapper_radial = d3.select("#container1")
+			.append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.attr("preserveAspectRatio", "xMidYMid meet")
+			.append("g")
+			.attr("transform", `translate(${width / 2 + 28}, ${height / 2})`);
+
+		// Create scales
+		const xScale = d3.scaleBand()
+			.domain(data.map(d => d.year))
+			.range([0, 2 * Math.PI])
+			.align(0);
+
+		const yScale = d3.scaleRadial()
+			.domain([0, d3.max(data, d => d.value + d.value2)])
+			.range([innerRadius, outerRadius]);
+
+		const axisGroup = wrapper_radial.append("g")
+			.attr("class", "axis")
+			.attr("transform", "rotate(90)");
+
+		// Draw grid
+		const ticks = yScale.ticks(5);
+
+		axisGroup.selectAll("grid")
+			.data(ticks)
+			.join("circle")
+			.attr("r", d => yScale(d))
+			.attr("fill", "none")
+			.attr("stroke", "#ccc")
+			.attr("stroke-dasharray", "2,2");
+
+		axisGroup.selectAll("text")
+			.data(ticks.filter(d => d % 1000 === 0 && d !== 0))
+			.join("text")
+			.attr("x", -3)
+			.attr("y", d => -yScale(d))
+			.attr("dy", "0.4em")
+			.attr("transform", d => `rotate(-90, 0, ${-yScale(d)})`)
+			.style("text-anchor", "end")
+			.style("fill", "#ccc")
+			.style("font-size", "9px")
+			.text(d => `${d / 1000}K`);
+
+		// Draw data
+		wrapper_radial.append("g")
+			.selectAll("g")
+			.data(data)
+			.join("g")
+			.each(function (d) {
+				d3.select(this)
+					.append("path")
+					.attr("fill", "#ec4c2a")
+					.attr("stroke", "#232323")
+					.attr("stroke-width", 1)
+					.attr("d", d3.arc()
+						.innerRadius(innerRadius)
+						.outerRadius(d => yScale(d.value))
+						.startAngle(d => xScale(d.year))
+						.endAngle(d => xScale(d.year) + xScale.bandwidth())
+						.padAngle(0.01)
+						.padRadius(innerRadius));
+				d3.select(this)
+					.append("path")
+					.attr("fill", "#ecad2a")
+					.attr("stroke", "#232323")
+					.attr("stroke-width", 1)
+					.attr("d", d3.arc()
+						.innerRadius(d => yScale(d.value))
+						.outerRadius(d => yScale(d.value + d.value2))
+						.startAngle(d => xScale(d.year))
+						.endAngle(d => xScale(d.year) + xScale.bandwidth())
+						.padAngle(0.01)
+						.padRadius(innerRadius));
+			});
+
+		// Draw peripherals
+		const firstLabels = wrapper_radial.append("g");
+		firstLabels.selectAll("text")
+			.data(data.filter(d => d.value2 >= 500))
+			.join("text")
+			.attr("x", d => (yScale(d.value + d.value2) - 24) * Math.cos((xScale(d.year) + xScale.bandwidth() / 2) - Math.PI / 2))
+			.attr("y", d => (yScale(d.value + d.value2) - 24) * Math.sin((xScale(d.year) + xScale.bandwidth() / 2) - Math.PI / 2))
+			.attr("transform", d => {
+				const angle = ((xScale(d.year) + xScale.bandwidth() / 2) * 180 / Math.PI) - 90;
+				const x = (yScale(d.value + d.value2) - 24) * Math.cos((xScale(d.year) + xScale.bandwidth() / 2) - Math.PI / 2);
+				const y = (yScale(d.value + d.value2) - 24) * Math.sin((xScale(d.year) + xScale.bandwidth() / 2) - Math.PI / 2);
+				if (angle > 90 && angle < 270) {
+					return `rotate(${angle + 180}, ${x}, ${y})`;
+				}
+				return `rotate(${angle}, ${x}, ${y})`;
+			})
+			.style("text-anchor", "middle")
+			.style("alignment-baseline", "middle")
+			.style("fill", "#8a610d")
+			.style("font-size", "12px")
+			.style("font-weight", "500")
+			.text(d => d.value2);
+
+
+		const secondLabels = wrapper_radial.append("g");
+
+		secondLabels.selectAll("text")
+			.data(data.filter(d => d.value >= 150))
+			.join("text")
+			.attr("x", d => (yScale(d.value) - 12) * Math.cos((xScale(d.year) + xScale.bandwidth() / 2) - Math.PI / 2))
+			.attr("y", d => (yScale(d.value) - 12) * Math.sin((xScale(d.year) + xScale.bandwidth() / 2) - Math.PI / 2))
+			.attr("transform", d => {
+				const angle = ((xScale(d.year) + xScale.bandwidth() / 2) * 180 / Math.PI) - 90;
+				const x = (yScale(d.value) - 12) * Math.cos((xScale(d.year) + xScale.bandwidth() / 2) - Math.PI / 2);
+				const y = (yScale(d.value) - 12) * Math.sin((xScale(d.year) + xScale.bandwidth() / 2) - Math.PI / 2);
+				if (angle > 90 && angle < 270) {
+					return `rotate(${angle + 180}, ${x}, ${y})`;
+				}
+				return `rotate(${angle}, ${x}, ${y})`;
+			})
+			.style("text-anchor", "middle")
+			.style("alignment-baseline", "middle")
+			.style("fill", "#b92e11")
+			.style("font-size", "8px")
+			.style("font-weight", "600")
+			.text(d => d.value);
+
+		const yearLabels = wrapper_radial.append("g");
+
+		yearLabels.selectAll("path")
+			.data(data)
+			.join("path")
+			.attr("id", (d, i) => `labelPath-${i}`)
+			.attr("d", d3.arc()
+				.innerRadius(outerRadius + 5)
+				.outerRadius(outerRadius + 5)
+				.startAngle(d => xScale(d.year))
+				.endAngle(d => xScale(d.year) + xScale.bandwidth())
+				.padAngle(0.01)
+				.padRadius(innerRadius))
+			.style("fill", "none")
+			.style("stroke", "none");
+
+		yearLabels.selectAll("text")
+			.data(data)
+			.join("text")
+			.append("textPath")
+			.attr("xlink:href", (d, i) => `#labelPath-${i}`)
+			.attr("startOffset", "25%")
+			.style("text-anchor", "middle")
+			.style("font-size", "12px")
+			.style("font-weight", "400")
+			.style("fill", "#ccc")
+			.text(d => d.year);
+	</script>
+</body>
+
+</html>
