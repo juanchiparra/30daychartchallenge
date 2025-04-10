@@ -30,3 +30,6 @@ For more information about the challenge, you can visit the [official repository
 
 ### Day 8
 ![Challenge 08](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V08/histogram.png)
+
+### Day 9
+![Challenge 09](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V09/diverging.png)
