@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Diverging</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="diverging.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Diverging</h1>
+            <span class="date">April 09, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>Who will win La Liga?</h2>
+            <p class="description">Over the past 24 seasons, Barcelona and Real Madrid have consistently dominated the
+                La Liga standings, winning the league title 20 times between them. In the current season, Barcelona is 4
+                points ahead of Real Madrid, and with only 8 games remaining, Barcelona is in a strong position to
+                secure the league title on their own.</p>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a href="https://www.transfermarkt.es/" class="external">Transfermarkt</a></p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { data } from './diverging.js';
+
+        // Chart dimensions
+        const margin = { top: 80, right: 10, bottom: 40, left: 10 };
+        const width = 1200 - margin.left - margin.right;
+        const height = 760 - margin.top - margin.bottom;
+        const middle = 100;
+
+        // Draw canvas
+        const wrapper_diverging = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+
+        // Add legend
+        const legend = wrapper_diverging.append("g")
+            .attr("class", "legend")
+            .attr("transform", `translate(${width / 2 - 180}, -80)`);
+
+        const legendData = [
+            { label: "Barcelona champion", color: "#004d98" },
+            { label: "Madrid champion", color: "#febe10" },
+            { label: "Other teams", color: "#f2f2f2" }
+        ];
+
+        let legendWidth = -50
+
+        legend.selectAll("g")
+            .data(legendData)
+            .enter()
+            .append("g")
+            .attr("transform", (d, i) => {
+                const xPosition = legendWidth;
+                legendWidth += 20 + 8 + getWidth(d.label, "14px Roboto Mono") + 40;
+                return `translate(${xPosition}, 0)`;
+            })
+            .each(function (d) {
+                const group = d3.select(this);
+
+                group.append("rect")
+                    .attr("width", 20)
+                    .attr("height", 20)
+                    .attr("fill", d.label === "Other teams" ? "url(#diagonalHatch)" : d.color)
+                    .attr("stroke", "black")
+                    .attr("stroke-width", 1);
+
+                group.append("text")
+                    .attr("x", 28)
+                    .attr("y", 14)
+                    .text(d.label)
+                    .attr("font-family", "Roboto Mono, monospace")
+                    .attr("font-size", "14px")
+                    .attr("fill", "#232323")
+                    .attr("text-anchor", "start");
+            });
+
+        function getWidth(text, font) {
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            context.font = font;
+            return context.measureText(text).width;
+        }
+
+        // Create scales
+        const yScale = d3.scaleBand()
+            .domain(data.map(d => d.temporada))
+            .range([0, height])
+            .padding(0.1);
+
+        const x1Scale = d3.scaleLinear()
+            .domain([0, 101])
+            .nice()
+            .range([(width - middle) / 2, 0]);
+
+        const x2Scale = d3.scaleLinear()
+            .domain([0, 101])
+            .nice()
+            .range([0, (width - middle) / 2]);
+
+        // Draw data
+        const defs = wrapper_diverging.append("defs");
+
+        defs.append("pattern")
+            .attr("id", "diagonalHatch")
+            .attr("patternUnits", "userSpaceOnUse")
+            .attr("width", 10)
+            .attr("height", 10)
+            .append("rect")
+            .attr("width", 10)
+            .attr("height", 10)
+            .attr("fill", "transparent");
+
+        defs.select("#diagonalHatch")
+            .append("path")
+            .attr("d", "M10,0 l-10,10 M15,5 l-10,10 M5,-5 l-10,10")
+            .attr("stroke", "black")
+            .attr("stroke-width", 0.9);
+
+        wrapper_diverging.selectAll(".bar1")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x1Scale(d.barcelona))
+            .attr("y", d => yScale(d.temporada))
+            .attr("width", d => x1Scale(0) - x1Scale(d.barcelona))
+            .attr("height", "22")
+            .attr("fill", d => d.campeon === "Barcelona" ? "#004d98" : "#a50044");
+
+        wrapper_diverging.selectAll(".bar1")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x1Scale(d.barcelona))
+            .attr("y", d => yScale(d.temporada))
+            .attr("width", d => x1Scale(0) - x1Scale(d.barcelona))
+            .attr("height", "22")
+            .attr("fill", d => d.campeon !== "" && d.campeon !== "Barcelona" && d.campeon !== "Real Madrid" ? "#f2f2f2" : "transparent")
+            .attr("fill-opacity", 1);
+
+        wrapper_diverging.selectAll(".bar1")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x1Scale(d.barcelona))
+            .attr("y", d => yScale(d.temporada))
+            .attr("width", d => x1Scale(0) - x1Scale(d.barcelona))
+            .attr("height", "22")
+            .attr("fill", d => d.campeon !== "" && d.campeon !== "Barcelona" && d.campeon !== "Real Madrid" ? "url(#diagonalHatch)" : "transparent")
+            .attr("fill-opacity", 0.8);
+
+        wrapper_diverging.selectAll(".bar1")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => Math.min(x1Scale(d.barcelona), x1Scale(d.r_barcelona)))
+            .attr("y", d => yScale(d.temporada))
+            .attr("width", d => Math.abs(x1Scale(d.r_barcelona) - x1Scale(d.barcelona)))
+            .attr("height", "22")
+            .attr("fill", "#fdfdfd");
+
+        wrapper_diverging.selectAll(".bar1")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x1Scale(d.barcelona))
+            .attr("y", d => yScale(d.temporada))
+            .attr("width", d => x1Scale(0) - x1Scale(d.barcelona))
+            .attr("height", "22")
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
+            .attr("fill", "none")
+
+        wrapper_diverging.selectAll(".bar2")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => (width + middle) / 2)
+            .attr("y", d => yScale(d.temporada))
+            .attr("width", d => x2Scale(d.madrid))
+            .attr("height", "22")
+            .attr("fill", d => d.campeon === "Real Madrid" ? "#febe10" : "#fdfdfd");
+
+        wrapper_diverging.selectAll(".bar2")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => (width + middle) / 2)
+            .attr("y", d => yScale(d.temporada))
+            .attr("width", d => x2Scale(d.madrid))
+            .attr("height", "22")
+            .attr("fill", d => d.campeon !== "" && d.campeon !== "Barcelona" && d.campeon !== "Real Madrid" ? "#f2f2f2" : "transparent")
+            .attr("fill-opacity", 1);
+
+        wrapper_diverging.selectAll(".bar2")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => (width + middle) / 2)
+            .attr("y", d => yScale(d.temporada))
+            .attr("width", d => x2Scale(d.madrid))
+            .attr("height", "22")
+            .attr("fill", d => d.campeon !== "" && d.campeon !== "Barcelona" && d.campeon !== "Real Madrid" ? "url(#diagonalHatch)" : "transparent")
+            .attr("fill-opacity", 0.8);
+
+        wrapper_diverging.selectAll(".bar2")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => Math.min((width + middle) / 2 + x2Scale(d.madrid), (width + middle) / 2 + x2Scale(d.r_madrid)))
+            .attr("y", d => yScale(d.temporada))
+            .attr("width", d => Math.abs(x2Scale(d.madrid) - x2Scale(d.r_madrid)))
+            .attr("height", "22")
+            .attr("fill", "#a2a2a2");
+
+        wrapper_diverging.selectAll(".bar2")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => (width + middle) / 2)
+            .attr("y", d => yScale(d.temporada))
+            .attr("width", d => x2Scale(d.madrid))
+            .attr("height", "22")
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
+            .attr("fill", "none")
+
+        wrapper_diverging.append("text")
+            .attr("x", width / 2)
+            .attr("y", -20)
+            .attr("text-anchor", "middle")
+            .style("font-size", "13px")
+            .style("letter-spacing", "2px")
+            .attr("fill", "#888888")
+            .append("tspan")
+            .attr("x", width / 2)
+            .attr("dy", "0.9em")
+            .attr("font-family", "Roboto Mono, monospace")
+            .text("Season");
+
+        // Draw gridlines
+        wrapper_diverging.append("text")
+            .attr("x", (width - middle) / 4 + 20)
+            .attr("y", -30)
+            .attr("text-anchor", "middle")
+            .style("font-size", "18px")
+            .style("font-weight", "bold")
+            .attr("font-family", "Roboto Mono, monospace")
+            .text("Barcelona");
+
+        wrapper_diverging.append("text")
+            .attr("x", (width + middle) / 2 + (width - middle) / 4 - 30)
+            .attr("y", -30)
+            .attr("text-anchor", "middle")
+            .style("font-size", "18px")
+            .style("font-weight", "bold")
+            .attr("font-family", "Roboto Mono, monospace")
+            .text("Real Madrid");
+
+        wrapper_diverging.append("g")
+            .attr("class", "x-axis")
+            .call(d3.axisTop(x1Scale).ticks(5).tickFormat(d => d === 100 ? "100 points" : d));
+
+        wrapper_diverging.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(${(width + middle) / 2},0)`)
+            .call(d3.axisTop(x2Scale).ticks(5).tickFormat(d => d === 100 ? "100 points" : d));
+
+
+        d3.selectAll(".x-axis").selectAll(".tick")
+            .filter(function (d) { return d === 0 || d === 50 || d === 100; })
+            .select("line")
+            .style("display", "none");
+
+        wrapper_diverging.selectAll(".x-axis .domain")
+            .style("display", "none");
+
+        wrapper_diverging.append("g")
+            .attr("class", "c-axis")
+            .attr("transform", `translate(${(width) / 2 - 8})`)
+            .call(d3.axisRight(yScale));
+
+        wrapper_diverging.append("g")
+            .attr("class", "grid")
+            .call(d3.axisTop(x1Scale).ticks(5)
+                .tickSize(-height)
+                .tickFormat('')
+                .tickValues(x1Scale.ticks(5).slice(1)))
+            .selectAll("line")
+            .style("opacity", 0.5);
+
+        wrapper_diverging.append("g")
+            .attr("class", "grid")
+            .attr("transform", `translate(${(width + middle) / 2},0)`)
+            .call(d3.axisTop(x2Scale).ticks(5)
+                .tickSize(-height)
+                .tickFormat('')
+                .tickValues(x2Scale.ticks(5).slice(1)))
+            .selectAll("line")
+            .style("opacity", 0.5);
+
+        wrapper_diverging.append("line")
+            .attr("x1", width / 2 + 50)
+            .attr("x2", width / 2 + 50)
+            .attr("y1", 0)
+            .attr("y2", height)
+            .attr("stroke", "black")
+            .attr("stroke-width", 2);
+
+        wrapper_diverging.append("line")
+            .attr("x1", width / 2 - 50)
+            .attr("x2", width / 2 - 50)
+            .attr("y1", 0)
+            .attr("y2", height)
+            .attr("stroke", "black")
+            .attr("stroke-width", 2);
+
+        wrapper_diverging.append("text")
+            .attr("x", width - 174)
+            .attr("y", 17)
+            .attr("text-anchor", "middle")
+            .style("letter-spacing", "1px")
+            .attr("fill", "#fdfdfd")
+            .attr("font-size", "11px")
+            .attr("font-weight", "bold")
+            .attr("font-family", "Roboto Mono, monospace")
+            .text("To be played");
+
+        wrapper_diverging.append("text")
+            .attr("x", 155)
+            .attr("y", 17)
+            .attr("text-anchor", "middle")
+            .style("letter-spacing", "1px")
+            .attr("fill", "#232323")
+            .attr("font-size", "11px")
+            .attr("font-weight", "bold")
+            .attr("font-family", "Roboto Mono, monospace")
+            .text("To be played");
+    </script>
+</body>
+
+</html>
