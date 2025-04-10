@@ -1,0 +1,173 @@
+/* Base */
+:root {
+    font-family: 'Inter', 'Avenir', system-ui, -apple-system, Helvetica, Arial, sans-serif;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    background-color: #fdfdfd;
+    color: #232323;
+}
+
+main {
+    padding: 20px;
+
+}
+
+.header {
+    width: 100%;
+    max-width: 650px;
+    margin: 30px auto;
+    padding: 0px auto;
+}
+
+.visualization {
+    width: 100%;
+    max-width: 1200px;
+    margin: 30px auto 0 auto;
+    padding: 0px auto;
+}
+
+.header span {
+    display: block;
+    text-align: center;
+}
+
+h1 {
+    font-size: 48px;
+    margin-top: 40px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-weight: bold;
+    text-align: center;
+}
+
+h2 {
+    font-size: 38px;
+    margin: 10px 0;
+    font-weight: 700;
+    max-width: 1000px;
+}
+
+h2 span {
+    font-weight: 300;
+}
+
+.description {
+    font-size: 19px;
+    margin-bottom: 14px;
+    font-weight: 300;
+}
+
+.external {
+    color: #232323;
+    text-decoration: none;
+    text-decoration-style: dotted;
+    text-decoration-thickness: 1px;
+}
+
+.external:hover {
+    text-decoration: none;
+}
+
+.footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.footer p {
+    font-size: 12px;
+    margin: 0;
+}
+
+/* Bar */
+.x-axis {
+    color: #232323;
+    font-size: 15px;
+    font-family: "Roboto Mono", monospace;
+
+}
+
+.c-axis {
+    font-size: 15px;
+    text-anchor: middle;
+    font-family: "Roboto Mono", monospace;
+}
+
+.axis-label {
+    font-size: 12px;
+}
+
+.c-axis .domain,
+.c-axis .tick line {
+    display: none;
+}
+
+.grid line {
+    stroke: #232323;
+    stroke-opacity: 0.7;
+    shape-rendering: crispEdges;
+    pointer-events: none;
+}
+
+.grid {
+    stroke-dasharray: 3, 3;
+}
+
+.grid .domain,
+.grid .tick text {
+    display: none;
+}
+
+.left {
+    padding-right: 20px;
+}
+
+.right {
+    padding-left: 20px;
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2em;
+    }
+
+    h2 {
+        font-size: 1.2em;
+    }
+
+    .header span {
+        font-size: 1em;
+    }
+
+    .description {
+        font-size: 1em;
+    }
+
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5em;
+    }
+
+    h2 {
+        font-size: 1em;
+    }
+
+
+    .header span {
+        font-size: 0.9em;
+    }
+
+    .description {
+        font-size: 0.9em;
+    }
+}
