@@ -37,3 +37,6 @@ For more information about the challenge, you can visit the [official repository
 ### Day 10
 ![Challenge 10](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V10/ridgeline.png)
 
+### Day 11
+![Challenge 11](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V11/stripes.png)
+
