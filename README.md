@@ -33,3 +33,7 @@ For more information about the challenge, you can visit the [official repository
 
 ### Day 9
 ![Challenge 09](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V09/diverging.png)
+
+### Day 10
+![Challenge 10](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V10/ridgeline.png)
+
