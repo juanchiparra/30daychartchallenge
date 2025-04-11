@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<title>Stripes</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="stripes.css" rel="stylesheet">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+	<main>
+		<section class="header">
+			<h1>Stripes</h1>
+			<span class="date">April 11, 2025</span>
+		</section>
+		<section class="visualization">
+			<h2>The world is changing:<span class="title"> global temperature increase</span>
+			</h2>
+			<p class="description">When comparing the average mean temperature from 1861 to 1890, it has increased by
+				1.46 degrees Celsius by 2024. While this may seem small, reaching temperatures between 40 and 50 °C
+				presents significant dangers we are beginning to face.</p>
+			<div id="container1" class="container"></div>
+			<div class="footer">
+				<p><b>Data:</b> <a href="https://www.imf.org/" class="external">Our World in Data</a></p>
+				<p><b>Design:</b> <a
+						href="https://ourworldindata.org/grapher/temperature-anomaly?showSelectionOnlyInTable=1"
+						class="external">@JuanchiParra</a></p>
+			</div>
+		</section>
+	</main>
+	<script type="module">
+		// Access data
+		import { data } from './stripes.js';
+
+		// Chart dimensions
+		const margin = { top: 40, right: 30, bottom: 20, left: 30 };
+		const width = 1100 - margin.left - margin.right;
+		const height = 700 - margin.top - margin.bottom;
+
+		// Draw canvas
+		const wrapper_stripes = d3.select("#container1")
+			.append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", `translate(${margin.left},${margin.top})`);
+
+		// Create scales
+		const years = data.map(d => d.Year);
+		const temperatures = data.map(d => d.Average);
+
+		const xScale = d3.scaleBand()
+			.domain(years)
+			.range([0, width])
+			.padding(-0.1);
+
+		const colorScale = d3.scaleSequential(d3.interpolateRdBu)
+			.domain([d3.max(temperatures), d3.min(temperatures)]);
+
+		// Draw data
+		wrapper_stripes.selectAll(".stripe")
+			.data(data)
+			.join("rect")
+			.attr("class", "stripe")
+			.attr("x", d => xScale(d.Year))
+			.attr("y", 0)
+			.attr("width", xScale.bandwidth())
+			.attr("height", height)
+			.attr("fill", d => colorScale(d.Average));
+
+		// Draw peripherals
+		wrapper_stripes.append("text")
+			.attr("x", 0)
+			.attr("y", height + 16)
+			.attr("text-anchor", "start")
+			.style("font-size", "12px")
+			.style("fill", "#232323")
+			.text(years[0]);
+
+		wrapper_stripes.append("text")
+			.attr("x", width)
+			.attr("y", height + 16)
+			.attr("text-anchor", "end")
+			.style("font-size", "12px")
+			.style("fill", "#232323")
+			.text(years[years.length - 1]);
+
+		wrapper_stripes.append("text")
+			.attr("x", -10)
+			.attr("y", -13)
+			.attr("text-anchor", "start")
+			.style("font-size", "11px")
+			.style("fill", "#232323")
+			.style("font-style", "italic")
+			.text(`above average by ${temperatures[0].toFixed(2)} °C`);
+
+		wrapper_stripes.append("text")
+			.attr("x", width + 10)
+			.attr("y", -13)
+			.attr("text-anchor", "end")
+			.style("font-size", "11px")
+			.style("fill", "#232323")
+			.style("font-style", "italic")
+			.text(`above average by ${temperatures[temperatures.length - 1].toFixed(2)} °C (estimated)`);
+
+		wrapper_stripes.append("text")
+			.attr("x", 0)
+			.attr("y", -3)
+			.attr("text-anchor", "start")
+			.style("font-size", "9px")
+			.style("fill", "#232323")
+			.text("▼");
+
+		wrapper_stripes.append("text")
+			.attr("x", width)
+			.attr("y", -3)
+			.attr("text-anchor", "end")
+			.style("font-size", "9px")
+			.style("fill", "#232323")
+			.text("▼");
+	</script>
+</body>
+
+</html>
