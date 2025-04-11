@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<title>Multi-modal</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="ridgeline.css" rel="stylesheet">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+	<main>
+		<section class="header">
+			<h1>Multi-modal</h1>
+			<span class="date">April 10, 2025</span>
+		</section>
+		<section class="visualization">
+			<h2>How quickly do names gain or lose popularity?</h2>
+			<p class="description">According to data from the Social Security Administration, the following were the
+				most popular baby names in the United States in 2023, along with the number of times each name has been
+				used from 1993 to 2023. <b class="highlighted">How rapidly can their popularity change?</b> The name
+				“Liam” had 401 registrations
+				in 1993, and 30 years later, it became the most popular name with 20,802 registrations.</p>
+			<div id="container1" class="container"></div>
+			<div class="footer">
+				<p><b>Data:</b> <a href="https://www.ssa.gov/OACT/babynames/" class="external">SSA</a></p>
+				<p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a></p>
+			</div>
+		</section>
+	</main>
+	<script type="module">
+		// Access data
+		import { data } from './ridgeline.js';
+
+		// Chart dimensions
+		const margin = { top: 40, right: 30, bottom: 26, left: 44 };
+		const width = 1200 - margin.left - margin.right;
+		const height = 1200 - margin.top - margin.bottom;
+		const overlap = 1.1;
+
+		// Draw canvas
+		const wrapper_ridgeline = d3.select("#container1")
+			.append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", `translate(${margin.left},${margin.top})`);
+
+		// Create scales
+		const groupedData = d3.group(data, d => d.Name);
+
+		const series = Array.from(groupedData, ([name, values]) => ({
+			name,
+			sex: values[0].Sex,
+			values: Array.from({ length: 2023 - 1993 + 1 }, (_, i) => {
+				const year = 1993 + i;
+				const record = values.find(d => d.Year === year);
+				return record ? record.Count : 0;
+			}),
+		}));
+
+		const xScale = d3.scaleLinear()
+			.domain([1993, 2023])
+			.range([margin.left, width - margin.right]);
+
+		const yScale = d3.scalePoint()
+			.domain(series.map(d => d.name))
+			.range([margin.top, height - margin.bottom])
+			.padding(0.01);
+
+		const z = d3.scaleLinear()
+			.domain([0, d3.max(series, d => d3.max(d.values))])
+			.range([0, -overlap * yScale.step()]);
+
+		// Draw peripherals
+		wrapper_ridgeline.append("g")
+			.attr("transform", `translate(0, ${height - margin.bottom + 6})`)
+			.call(d3.axisBottom(xScale).ticks(5).tickFormat(d3.format("d")))
+			.style("font-size", "16px")
+			.style("font-weight", "500")
+			.selectAll(".domain, .tick line").remove();
+
+		wrapper_ridgeline.append("g")
+			.attr("transform", `translate(${margin.left}, -4)`)
+			.call(d3.axisLeft(yScale).tickSize(0).tickPadding(4))
+			.style("font-size", "20px")
+			.style("font-weight", "500")
+			.selectAll(".domain, .tick line").remove();
+
+		wrapper_ridgeline.selectAll(".tick text")
+			.style("fill", "black");
+
+		const groups = wrapper_ridgeline.append("g")
+			.selectAll("g")
+			.data(series)
+			.join("g")
+			.attr("transform", d => `translate(0, ${yScale(d.name)})`);
+
+		// Draw data
+		const area = d3.area()
+			.curve(d3.curveBasis)
+			.defined(d => !isNaN(d))
+			.x((d, i) => xScale(1993 + i))
+			.y0(0)
+			.y1(d => z(d));
+
+		const line = area.lineY1();
+
+		groups.append("path")
+			.attr("fill", d => d.sex === "M" ? "#00c4aa" : "#8701f9")
+			.attr("fill-opacity", 0.9)
+			.attr("d", d => area(d.values));
+
+		groups.append("path")
+			.attr("fill", "none")
+			.attr("stroke", "#232323")
+			.attr("stroke-width", 2)
+			.attr("d", d => line(d.values));
+	</script>
+</body>
+
+</html>
