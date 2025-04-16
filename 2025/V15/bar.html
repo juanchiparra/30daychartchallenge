@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Complicated</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="bar.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Complicated</h1>
+            <span class="date">April 15, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>The devaluation of the bolivar against the U.S. dollar</span></h2>
+            <p class="description">Venezuela's official currency has experienced significant challenges in recent years:
+                Its name has been changed, it has undergone redenomination, and it has consistently lost value. The gap
+                between them and the U.S. dollar is growing larger.</p>
+            <div id="latestDataContainer">
+                <div id="latestDataContainer">
+                    <div class="latest-info">
+                        <span class="label">LATEST MONTH</span>
+                        <span id="latestYear" class="value">2024</span>
+                    </div>
+                    <div class="latest-info">
+                        <span class="label">RATE (Bs/USD)</span>
+                        <span id="latestValue" class="value">1.46</span>
+                    </div>
+                </div>
+                <button id="play">▶ Update</button>
+            </div>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Design:</b> <a
+                        href="https://ourworldindata.org/grapher/temperature-anomaly?showSelectionOnlyInTable=1"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { allData } from './bar.js';
+
+        // Add formatting
+        allData.forEach(d => d.Date = d3.timeParse("%Y-%m")(d.Date));
+
+        let data = allData.filter(d => d.Date.getFullYear() === 2021);
+
+        // Chart dimensions
+        const margin = { top: 30, right: 30, bottom: 40, left: 80 };
+        const width = 1100 - margin.left - margin.right;
+        const height = 600 - margin.top - margin.bottom;
+
+        // Draw canvas
+        const svg = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Create scales
+        const yScale = d3.scaleTime()
+            .range([height, 0]);
+
+        const xScale = d3.scaleLinear()
+            .range([0, width]);
+
+        // Draw peripherals
+        const yAxis = svg.append("g")
+            .attr("class", "y-axis")
+            .attr("transform", `translate(0, 0)`)
+            .style("font-size", "16px")
+            .attr("color", "#232323");
+
+        const xAxis = svg.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0, -6)`)
+            .style("font-size", "12px")
+            .attr("visibility", "hidden");
+
+        function update(data) {
+            data.sort((a, b) => b.Date - a.Date);
+
+            yScale.domain(d3.extent(data, d => d.Date));
+            xScale.domain([0, d3.max(data, d => d.Average)]);
+
+            const maxBars = 12;
+            const padding = 4;
+            const barHeight = Math.min(height / data.length, height / maxBars) - padding;
+
+            const bars = svg.selectAll(".bar")
+                .data(data, d => d.Date);
+
+            // Draw data
+            bars.enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("y", d => yScale(d.Date) - barHeight / 2)
+                .attr("x", 0)
+                .attr("height", barHeight)
+                .attr("width", d => xScale(d.Average))
+                .attr("fill", "#731a46")
+                .merge(bars)
+                .transition()
+                .duration(500)
+                .attr("y", d => yScale(d.Date) - barHeight / 2)
+                .attr("x", 0)
+                .attr("height", barHeight)
+                .attr("width", d => xScale(d.Average));
+
+            bars.exit().remove();
+
+            xAxis.transition().duration(500).call(
+                d3.axisTop(xScale)
+                    .tickFormat(d => d === 0 ? "" : `${d} Bs`)
+                    .tickSize(-height - 20)
+            );
+            yAxis.transition().duration(500).call(d3.axisLeft(yScale).tickFormat(d3.timeFormat("%Y-%m")));
+
+            const latest = data[0];
+            document.getElementById("latestYear").textContent = d3.timeFormat("%Y-%m")(latest.Date);
+            document.getElementById("latestValue").textContent = `${latest.Average.toFixed(2)} Bs`;
+        }
+
+        // Add interaction
+        document.getElementById("play").addEventListener("click", () => {
+            let currentIndex = data.length;
+
+            const interval = setInterval(() => {
+                if (currentIndex < allData.length) {
+                    data.push(allData[currentIndex]);
+                    currentIndex++;
+                    update(data);
+
+                    const currentDate = new Date();
+                    document.getElementById("currentDate").textContent = currentDate.toDateString();
+                } else {
+                    clearInterval(interval);
+
+                    xAxis.attr("visibility", "visible");
+                }
+            }, 500);
+        });
+        update(data);
+
+        let currentIndex = data.length;
+        document.getElementById("play").addEventListener("click", () => {
+            let currentIndex = data.length;
+
+            const interval = setInterval(() => {
+                if (currentIndex < allData.length) {
+                    if (!data.includes(allData[currentIndex])) {
+                        data.push(allData[currentIndex]);
+                        currentIndex++;
+                        update(data);
+                    }
+
+                    const currentDate = new Date();
+                    document.getElementById("currentDate").textContent = currentDate.toDateString();
+                } else {
+                    clearInterval(interval);
+                    xAxis.attr("visibility", "visible");
+                }
+            }, 500);
+        });
+    </script>
+</body>
+
+</html>
