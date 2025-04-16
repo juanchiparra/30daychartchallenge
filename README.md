@@ -52,5 +52,6 @@ For more information about the challenge, you can visit the [official repository
 ### Day 15
 ![Challenge 15](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V15/bar.png)
 
-
+### Day 16
+![Challenge 16](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V16/area.png)
 
