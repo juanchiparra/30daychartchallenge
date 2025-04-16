@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Negative</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="area.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Negative</h1>
+            <span class="date">April 16, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>One of the coldest places on Earth: Vostok Station</h2>
+            <p class="description"> A Russian research center located in Antarctica, is considered one of the coldest
+                places on the planet. In 1983, the Vostok Station recorded the lowest air temperature ever measured on
+                the Earth's surface, reaching <b></b>-89.2 °C. The station's annual average temperature is around -54.5 °C,
+                reinforcing its reputation as the coldest place on Earth.</p>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a href="https://rp5.ru/Weather_archive_at_Vostok_Station" class="external">rp5</a></p>
+                <p><b>Design:</b> <a
+                        href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { data } from './area.js';
+
+        // Add formatting
+        const parseDate = d3.timeParse("%d-%m-%Y");
+
+        data.forEach(d => {
+            d.year = parseDate(d.year);
+        });
+
+
+        // Chart dimensions
+        const margin = { top: 30, right: 42, bottom: 30, left: 0 };
+        const width = 1200 - margin.left - margin.right;
+        const height = 700 - margin.top - margin.bottom;
+
+        // Draw canvas
+        const wrapper_area = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Create scales
+        const xScale = d3.scaleTime()
+            .domain(d3.extent(data, d => d.year))
+            .range([0, width]);
+
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.value)])
+            .range([0, height]);
+
+        // Draw peripherals
+        wrapper_area.append("g")
+            .attr("transform", `translate(0, -22)`)
+            .attr("class", "axis-x")
+            .call(
+                d3.axisBottom(xScale)
+                    .ticks(d3.timeMonth.every(1))
+                    .tickFormat(d3.timeFormat("%b %Y"))
+            )
+            .selectAll("text")
+            .style("text-anchor", "start");
+
+        wrapper_area.append("g")
+            .attr("transform", `translate(${width + 12}, 0)`)
+            .attr("class", "axis-y")
+            .call(d3.axisLeft(yScale).tickFormat(d => d === 0 ? `${d} °C` : `-${d} °C`));
+
+        const xAxisGrid = d3.axisBottom(xScale)
+            .tickSize(-height)
+            .tickFormat('')
+            .ticks(5);
+
+        const yAxisGrid = d3.axisLeft(yScale)
+            .tickSize(-width)
+            .tickFormat('')
+            .ticks(5);
+
+        const grid = wrapper_area.append('g')
+            .attr('class', 'grid');
+
+        grid.append('g')
+            .attr("transform", `translate(0, 0)`)
+            .call(yAxisGrid);
+
+        // Draw data
+        const area = d3.area()
+            .x(d => xScale(d.year))
+            .y0(0)
+            .y1(d => yScale(d.value));
+
+        wrapper_area.append("path")
+            .datum(data)
+            .attr("class", "area-before")
+            .attr("d", area)
+            .style("fill", "#051650");
+    </script>
+</body>
+
+</html>
