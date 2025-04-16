@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<title>Kinship</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="kinship.css" rel="stylesheet">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+	<main>
+		<section class="header">
+			<h1>Kinship</h1>
+			<span class="date">April 14, 2025</span>
+		</section>
+		<section class="visualization">
+			<h2>Remember everything: <span class="title"> manage your knowledge with atomic notes</title>
+			</h2>
+			<p class="description">Atomic notes are individual units of knowledge that capture a specific idea. These
+				notes are interlinked with other concepts, allowing them to come together to form a larger
+				understanding. Tools like Obsidian enable you to explore these connections and manage your knowledge
+				more efficiently.
+			</p>
+			<div id="container1" class="container"></div>
+			<div class="footer">
+				<p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a></p>
+			</div>
+		</section>
+	</main>
+	<script type="module">
+		// Access data
+		import { data } from './kinship.js';
+
+		// Chart dimensions
+		const width = 1200;
+		const height = 740;
+
+		// Draw canvas
+		const svg = d3.select("#container1")
+			.append("svg")
+			.attr("width", width)
+			.attr("height", height);
+
+		// Draw data
+		const simulation = d3.forceSimulation(data.nodes)
+			.force("link", d3.forceLink(data.links).id(d => d.id).distance(100))
+			.force("charge", d3.forceManyBody().strength(-100))
+			.force("center", d3.forceCenter(width / 2, height / 2))
+			.force("collision", d3.forceCollide().radius(d => d.size || 10));
+
+		const link = svg.append("g")
+			.attr("class", "links")
+			.selectAll("line")
+			.data(data.links)
+			.enter()
+			.append("line")
+			.attr("stroke", "#ccc")
+			.attr("stroke-width", 0.3);
+
+		const node = svg.append("g")
+			.attr("class", "nodes")
+			.selectAll("circle")
+			.data(data.nodes)
+			.enter()
+			.append("circle")
+			.style("cursor", "pointer")
+			.attr("r", d => d.size || 5)
+			.attr("fill", "#7c3aed")
+			.call(drag(simulation));
+
+		// Add labels
+		const label = svg.append("g")
+			.attr("class", "labels")
+			.selectAll("text")
+			.data(data.nodes.filter(d => d.size >= 12))
+			.enter()
+			.append("text")
+			.text(d => d.name)
+			.attr("font-size", "14px")
+			.attr("text-anchor", "middle")
+			.attr("dy", "2.05em")
+			.attr("pointer-events", "none")
+			.attr("fill", "#fdfdfd")
+			.attr("font-family", "Roboto Mono, monospace")
+			.style("user-select", "none");
+
+
+		// Add interaction
+		let isDragging = false;
+
+		node.on("mouseover", function (event, d) {
+			if (isDragging) return;
+
+			svg.append("text")
+				.attr("class", "hover-label")
+				.attr("x", d.x)
+				.attr("y", d.y - 10)
+				.attr("text-anchor", "middle")
+				.attr("font-size", "14px")
+				.attr("font-family", "Roboto Mono, monospace")
+				.attr("fill", "#fdfdfd")
+				.text(d.size < 12 ? d.name : "");
+
+			node.style("fill", "#3a2d50");
+			link.style("opacity", "0.2");
+
+			d3.select(this).style("fill", "#7c3aed");
+
+			link.filter(l => l.source.id === d.id || l.target.id === d.id)
+				.style("opacity", 1);
+
+			node.filter(n => data.links.some(l => (l.source.id === d.id && l.target.id === n.id) || (l.target.id === d.id && l.source.id === n.id)))
+				.style("fill", "#7c3aed");
+		})
+			.on("mouseout", function () {
+				if (isDragging) return;
+
+				node.style("fill", "#7c3aed");
+				link.style("opacity", 1);
+				svg.selectAll(".hover-label").remove();
+			})
+			.on("click", function () {
+				svg.selectAll(".hover-label").remove();
+			});
+
+		simulation.on("tick", () => {
+			link
+				.attr("x1", d => Math.max(d.source.size || 5, Math.min(width - (d.source.size || 5), d.source.x)))
+				.attr("y1", d => Math.max(d.source.size || 5, Math.min(height - (d.source.size || 5), d.source.y)))
+				.attr("x2", d => Math.max(d.target.size || 5, Math.min(width - (d.target.size || 5), d.target.x)))
+				.attr("y2", d => Math.max(d.target.size || 5, Math.min(height - (d.target.size || 5), d.target.y)));
+
+			node
+				.attr("cx", d => {
+					d.x = Math.max(d.size || 5, Math.min(width - (d.size || 5), d.x));
+					return d.x;
+				})
+				.attr("cy", d => {
+					d.y = Math.max(d.size || 5, Math.min(height - (d.size || 5), d.y));
+					return d.y;
+				});
+
+			label
+				.attr("x", d => d.x)
+				.attr("y", d => d.y);
+		});
+
+		function drag(simulation) {
+			function dragstarted(event, d) {
+				isDragging = true; 
+				if (!event.active) simulation.alphaTarget(0.3).restart();
+				d.fx = d.x;
+				d.fy = d.y;
+
+				svg.selectAll(".hover-label").remove();
+			}
+
+			function dragged(event, d) {
+				d.fx = event.x;
+				d.fy = event.y;
+			}
+
+			function dragended(event, d) {
+				isDragging = false;
+				if (!event.active) simulation.alphaTarget(0);
+				d.fx = null;
+				d.fy = null;
+			}
+
+			return d3.drag()
+				.on("start", dragstarted)
+				.on("drag", dragged)
+				.on("end", dragended);
+		}
+	</script>
+</body>
+
+</html>
