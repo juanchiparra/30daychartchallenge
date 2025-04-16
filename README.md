@@ -40,3 +40,17 @@ For more information about the challenge, you can visit the [official repository
 ### Day 11
 ![Challenge 11](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V11/stripes.png)
 
+### Day 12
+![Challenge 12](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V12/voronoi.png)
+
+### Day 13
+![Challenge 13](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V13/clusters.png)
+
+### Day 14
+![Challenge 14](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V14/kinship.png)
+
+### Day 15
+![Challenge 15](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V15/bar.png)
+
+
+
