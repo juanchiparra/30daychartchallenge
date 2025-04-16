@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<title>Clusters</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="clusters.css" rel="stylesheet">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+	<main>
+		<section class="header">
+			<h1>Clusters</h1>
+			<span class="date">April 14, 2025</span>
+		</section>
+		<section class="visualization">
+			<h2>Key progress indicators: <span class="title">life expectancy and gross national income</span></h2>
+			<p class="description">There are numerous indicators used to assess the progress of a country. Among these,
+				Gross National Income (GNI) per capita and life expectancy offer valuable insights into a country's
+				economic development and the overall well-being of its population.</p>
+			<div id="scatter-container" class="container"></div>
+			<div class="footer">
+				<p><b>Data:</b> <a
+						href="https://databank.worldbank.org/reports.aspx?source=world-development-indicators#"
+						class="external">World Bank</a></p>
+				<p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a></p>
+			</div>
+		</section>
+	</main>
+	<script type="module">
+		// Import data
+		import { data } from './clusters.js';
+
+		const filteredData = data.filter(d => d.life_expectancy !== ".." && d.gni_per_capita !== "..");
+
+		filteredData.forEach(d => {
+			d.life_expectancy = +d.life_expectancy;
+			d.gni_per_capita = +d.gni_per_capita;
+		});
+
+		// K-means clustering
+		const k = 4;
+		const centroids = Array.from({ length: k }, () => ({
+			gni_per_capita: Math.random() * d3.max(filteredData, d => d.gni_per_capita),
+			life_expectancy: Math.random() * d3.max(filteredData, d => d.life_expectancy)
+		}));
+
+		let clusters;
+		for (let i = 0; i < 10; i++) {
+			clusters = filteredData.map(d => {
+				const distances = centroids.map(c => Math.hypot(d.gni_per_capita - c.gni_per_capita, d.life_expectancy - c.life_expectancy));
+				const cluster = distances.indexOf(Math.min(...distances));
+				return { ...d, cluster };
+			});
+
+			centroids.forEach((c, i) => {
+				const clusterPoints = clusters.filter(d => d.cluster === i);
+				if (clusterPoints.length > 0) {
+					c.gni_per_capita = d3.mean(clusterPoints, d => d.gni_per_capita);
+					c.life_expectancy = d3.mean(clusterPoints, d => d.life_expectancy);
+				}
+			});
+		}
+
+		// Chart dimensions
+		const margin = { top: 40, right: 80, bottom: 60, left: 80 };
+		const width = 1100 - margin.left - margin.right;
+		const height = 600 - margin.top - margin.bottom;
+
+		// Draw canvas
+		const wrapper_scatter = d3.select("#scatter-container")
+			.append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", `translate(${margin.left},${margin.top})`);
+
+		// Create scales
+		const xScale = d3.scaleLinear()
+			.domain([0, 140000])
+			.range([0, width]);
+
+		const yScale = d3.scaleLinear()
+			.domain([0, 100])
+			.range([height, 0]);
+
+		const colorScale = d3.scaleOrdinal()
+			.domain(d3.range(k))
+			.range(["#F03A47", "#276FBF", "#F4B860", "#91C7B1"]);
+
+		// Draw peripherals
+		const xAxis = d3.axisBottom(xScale).ticks(6, "~s");
+		const yAxis = d3.axisLeft(yScale).ticks(4);
+
+		wrapper_scatter.append("g")
+			.attr("class", "x-axis")
+			.attr("transform", `translate(0,${height})`)
+			.call(xAxis)
+			.append("text")
+			.attr("class", "x-axis")
+			.attr("x", width / 2)
+			.attr("y", 42)
+			.attr("fill", "#232323")
+			.attr("text-anchor", "middle")
+			.attr("font-size", "14px")
+			.text("Gross national income per capita");
+
+		wrapper_scatter.append("g")
+			.attr("class", "y-axis")
+			.call(yAxis)
+			.append("text")
+			.attr("class", "y-axis")
+			.attr("x", -height / 2)
+			.attr("y", -50)
+			.attr("fill", "#232323")
+			.attr("text-anchor", "middle")
+			.attr("transform", "rotate(-90)")
+			.attr("font-size", "14px")
+			.text("Life expectancy (years)");
+
+
+		wrapper_scatter.append("g")
+			.attr("class", "grid")
+			.attr("transform", `translate(0,${height})`)
+			.call(
+				d3.axisBottom(xScale)
+					.ticks(6)
+					.tickSize(-height)
+					.tickFormat("")
+			);
+
+		wrapper_scatter.append("g")
+			.attr("class", "grid")
+			.call(
+				d3.axisLeft(yScale)
+					.ticks(4)
+					.tickSize(-width)
+					.tickFormat("")
+			);
+
+		// Draw data
+		wrapper_scatter.selectAll("circle")
+			.data(clusters)
+			.enter()
+			.append("circle")
+			.attr("cx", d => xScale(d.gni_per_capita))
+			.attr("cy", d => yScale(d.life_expectancy))
+			.attr("r", d => Math.sqrt(d.gni_per_capita) / 25)
+			.attr("fill", d => colorScale(d.cluster))
+			.attr("stroke", "black")
+			.attr("stroke-width", d => d.gni_per_capita < 20000 ? 0.75 : 1)
+			.attr("opacity", 1)
+			.append("title")
+			.text(d => `${d.name}\nCluster: ${d.cluster}\nLife Expectancy: ${d.life_expectancy}\nGNI per Capita: ${d.gni_per_capita}`);
+
+		// Add labels
+		const labeledCountries = [
+			"Norway",
+			"United States",
+			"South Africa",
+			"Lithuania",
+			"Guyana",
+			"Namibia",
+			"Bolivia",
+			"Nigeria"
+		];
+
+		const labeledData = clusters.filter(d => labeledCountries.includes(d.name));
+
+		wrapper_scatter.selectAll(".label")
+			.data(labeledData)
+			.enter()
+			.append("text")
+			.attr("class", "label")
+			.attr("x", d => xScale(d.gni_per_capita) + (d.gni_per_capita <= 45000 ? 8 : 16))
+			.attr("y", d => yScale(d.life_expectancy) + (d.gni_per_capita <= 45000 ? 4 : 4))
+			.attr("fill", "#232323")
+			.attr("font-size", "13px")
+			.attr("text-anchor", "start")
+			.text(d => d.name);
+	</script>
+</body>
+
+</html>
