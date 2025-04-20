@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Urbanization</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="stacked.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Urbanization</h1>
+            <span class="date">April 20, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2> The urban tide:<span> a world increasingly concentrated in cities</span></h2>
+            <p class="description">According to the United Nations, each year, a greater percentage of the global
+                population lives in urban areas compared to rural ones. Projections* suggest that by 2050, population
+                growth and rural-to-urban migration will add 2.5 billion people to urban areas, with nearly 90% of this
+                increase occurring in Asia and Africa.</p>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a href="https://www.un.org/en/desa/2018-revision-world-urbanization-prospects"
+                        class="external">UN</a></p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { data } from './stacked.js';
+
+        // Chart dimensions
+        const margin = { top: 50, right: 30, bottom: 40, left: 60 };
+        const width = 1100 - margin.left - margin.right;
+        const height = 700 - margin.top - margin.bottom;
+
+        // Draw canvas
+        const wrapper_stacked = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Create scales
+        const keys = ["Urban", "Rural"];
+        const stackedData = d3.stack().keys(keys)(data);
+
+        const xScale = d3.scaleBand()
+            .domain(data.map(d => d.year))
+            .range([0, width])
+            .padding(0.2);
+
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(stackedData[stackedData.length - 1], d => d[1])])
+            .nice()
+            .range([height, 0]);
+
+        const colorScale = d3.scaleOrdinal()
+            .domain(keys)
+            .range(["#232323", "#aed65a"]);
+
+        // Draw bars
+        wrapper_stacked.selectAll("g")
+            .data(stackedData)
+            .enter()
+            .append("g")
+            .attr("fill", d => colorScale(d.key))
+            .selectAll("rect")
+            .data(d => d)
+            .enter()
+            .append("rect")
+            .attr("x", d => xScale(d.data.year))
+            .attr("y", d => yScale(d[1]))
+            .attr("height", d => yScale(d[0]) - yScale(d[1]))
+            .attr("width", xScale.bandwidth())
+            .attr("stroke", "black")
+            .attr("stroke-width", 1);
+
+        // Add labels
+        const addPercentages = (data, stackedData) => {
+            const firstYear = data[0].year;
+            const lastYear = data[data.length - 1].year;
+
+            const filteredData = stackedData.flatMap(layer => layer.filter(d => d.data.year === firstYear || d.data.year === lastYear));
+
+            wrapper_stacked.selectAll(".percentage-text")
+                .data(filteredData)
+                .enter()
+                .append("text")
+                .attr("class", "percentage-text")
+                .attr("x", d => xScale(d.data.year) + xScale.bandwidth() / 2)
+                .attr("y", d => (yScale(d[0]) + yScale(d[1])) / 2)
+                .attr("text-anchor", "middle")
+                .attr("fill", d => {
+                    const value = d[1] - d[0];
+                    return value === d.data.Urban ? "#fdfdfd" : "#232323";
+                })
+                .style("font-weight", d => {
+                    const value = d[1] - d[0];
+                    return value === d.data.Urban ? "100" : "400";
+                })
+                .style("font-size", "16px")
+                .style("font-family", "'Roboto Mono', monospace")
+                .style("opacity", 0.9)
+                .text(d => {
+                    const total = d.data.Urban + d.data.Rural;
+                    const value = d[1] - d[0];
+                    return `${Math.round((value / total) * 100)}%`;
+                });
+        };
+
+        addPercentages(data, stackedData);
+
+        // Draw peripherals
+        wrapper_stacked.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(xScale).tickSize(0))
+            .selectAll("text")
+            .style("font-family", "'Roboto Mono', monospace")
+            .style("font-size", "14px")
+            .attr("dy", "1em");
+
+        wrapper_stacked.selectAll(".domain")
+            .style("stroke", "black")
+            .style("stroke-width", 1);
+
+        // Add legend
+        const legend = wrapper_stacked.append("g")
+            .attr("transform", `translate(${width / 2 - (keys.length * 50)}, -40)`);
+
+        keys.forEach((key, i) => {
+            const legendGroup = legend.append("g")
+                .attr("transform", `translate(${i * 120}, 0)`);
+
+            legendGroup.append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", 15)
+                .attr("height", 15)
+                .attr("fill", colorScale(key))
+                .attr("stroke", "black")
+                .attr("stroke-width", 0.5);
+
+            legendGroup.append("text")
+                .attr("x", 20)
+                .attr("y", 9)
+                .text(key)
+                .style("font-size", "14px")
+                .style("font-family", "'Roboto Mono', monospace")
+                .attr("alignment-baseline", "middle");
+        });
+    </script>
+</body>
+
+</html>
