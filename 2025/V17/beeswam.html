@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Birds</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="beeswam.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Birds</h1>
+            <span class="date">April 17, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>The most endangered families of birds in danger of extinction</h2>
+            <p class="description"></p>
+            <div id="container1" class="container">The IUCN Red List of Threatened Species evaluates the extinction risk
+                of thousands of species of plants, fungi, and animals, using scientific criteria to classify them into
+                different threat categories. In this way, the most endangered birds are identified.</div>
+            <div class="footer">
+                <p><b>Data:</b> <a
+                        href="https://figshare.com/articles/dataset/A_global_dataset_of_directional_migration_networks_of_migratory_birds/27301377?file=49985931n"
+                        class="external">Springer Nature</a></p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { data } from './beeswam.js';
+
+        // Chart dimensions
+        const margin = { top: 10, right: 0, bottom: 40, left: 64 };
+        const width = 1100 - margin.left - margin.right;
+        const height = 700 - margin.top - margin.bottom;
+
+        // Draw canvas
+        const wrapper_beeswarm = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Draw tooltip
+        const tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip");
+
+        // Create scales
+        const xScale = d3.scaleBand()
+            .domain(["Least Concern", "Near Threatened", "Vulnerable", "Endangered", "Critically Endangered"])
+            .range([margin.left, width - margin.right])
+            .padding(0.1);
+
+        const yScale = d3.scaleBand()
+            .domain(data.map(d => d.families).sort((a, b) => b.localeCompare(a)))
+            .range([height - margin.bottom, margin.top])
+            .padding(0.1);
+
+        const colorScale = d3.scaleOrdinal()
+            .domain(["Least Concern", "Near Threatened", "Vulnerable", "Endangered", "Critically Endangered"])
+            .range(["#FEE2E2", "#FCA5A5", "#F87171", "#EF4444", "#B91C1C"]);
+
+        // Draw gridlines	
+        const yGrid = d3.axisLeft(yScale)
+            .ticks(9)
+            .tickSize(-width + margin.left + margin.right)
+            .tickFormat('');
+
+        wrapper_beeswarm.append("g")
+            .attr("class", "grid")
+            .attr("transform", `translate(${margin.left},0)`)
+            .call(yGrid);
+
+        // Draw peripherals
+        const yAxis = d3.axisLeft(yScale)
+            .ticks(9)
+            .tickSize(0);
+
+        wrapper_beeswarm.append("g")
+            .attr("class", "axis")
+            .attr("transform", `translate(${margin.left},0)`)
+            .call(yAxis);
+
+        const xAxis = d3.axisBottom(xScale)
+            .tickSize(0);
+
+        wrapper_beeswarm.append("g")
+            .attr("class", "axis")
+            .attr("transform", `translate(0,${height - margin.bottom})`)
+            .call(xAxis);
+
+        // Add labels
+        wrapper_beeswarm.append("text")
+            .attr("x", width / 2)
+            .attr("y", height + 10)
+            .attr("text-anchor", "middle")
+            .attr("font-size", "12px")
+            .attr("fill", "#8c8c8c")
+            .text("Species extinction risk categories");
+
+        wrapper_beeswarm.append("text")
+            .attr("x", -margin.left + 20)
+            .attr("y", height / 2)
+            .attr("text-anchor", "middle")
+            .attr("font-size", "12px")
+            .attr("fill", "#8c8c8c")
+            .attr("transform", `rotate(-90, ${-margin.left + 10}, ${height / 2})`)
+            .text("Scientific names of bird families");
+
+
+        // Draw data
+        const simulation = d3.forceSimulation(data)
+            .force("x", d3.forceX(d => xScale(d.iucn) + xScale.bandwidth() / 2).strength(0.1))
+            .force("y", d3.forceY(d => yScale(d.families) + yScale.bandwidth() / 2).strength(10))
+            .force("collide", d3.forceCollide(6))
+            .stop();
+
+        for (let i = 0; i < 200; ++i) simulation.tick();
+
+        const circles = wrapper_beeswarm.append("g")
+            .selectAll("circle")
+            .data(data)
+            .enter().append("circle")
+            .attr("class", "dot")
+            .attr("r", 5)
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr("fill", d => colorScale(d.iucn))
+            .attr("opacity", 1)
+            .on("mouseover", (event, d) => {
+                circles.attr("opacity", 0.2);
+                d3.selectAll(`.dot`).filter(e => e.families === d.families).attr("opacity", 1);
+
+                tooltip.style("opacity", 1)
+                    .html(`<b>Name:</b> ${d.name}<br><b>Families:</b> ${d.families}<br><b>IUCN:</b> ${d.iucn}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mousemove", (event) => {
+                tooltip.style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mouseout", () => {
+                circles.attr("opacity", 1);
+
+                tooltip.style("opacity", 0);
+            });
+    </script>
+</body>
+
+</html>
