@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>El País</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="area.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>El País</h1>
+            <span class="date">April 18, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>The impact of drought on Spain's reservoirs <span>(2024)</span></h2>
+            <div class="description">
+                <p class="text">Reservoirs are crucial infrastructures in Spain, ensuring water supply, energy production, and irrigation. Prolonged periods of drought can significantly lower water levels in these reservoirs, jeopardizing their essential functions. Between 2023 and 2024, some regions in Spain experienced critical reservoir levels due to extended drought conditions.
+                </p>
+                <div id="legend-container" class="container"></div>
+            </div>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a
+                        href="https://elpais.com/clima-y-medio-ambiente/2024-05-07/cual-es-el-nivel-de-agua-de-los-embalses-en-espana-esta-semana.html"
+                        class="external">El País</a></p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { data } from './area.js';
+
+        // Chart dimensions
+        const margin = { top: 20, right: 2, bottom: 20, left: 2 };
+        const width = 1200 - margin.left - margin.right;
+        const height = 675 - margin.top - margin.bottom;
+
+        // Draw canvas
+        const wrapper_area = d3.select("#container1")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+         // Create scales
+        const boxSize = 170;
+        const paddingX = 10;
+        const paddingY = 40;
+
+        // Draw data
+        wrapper_area.selectAll("rect.background")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("class", "background")
+            .attr("x", (d, i) => (i % 6) * (boxSize + paddingX))
+            .attr("y", (d, i) => Math.floor(i / 6) * (boxSize + paddingY))
+            .attr("width", boxSize)
+            .attr("height", boxSize)
+            .attr("fill", "#ccc")
+            .attr("stroke", "#b3b3b3");
+
+        wrapper_area.selectAll("rect.fill")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("class", "fill")
+            .attr("x", (d, i) => (i % 6) * (boxSize + paddingX))
+            .attr("y", (d, i) => Math.floor(i / 6) * (boxSize + paddingY) + boxSize * (1 - d.fill))
+            .attr("width", boxSize)
+            .attr("height", d => boxSize * d.fill)
+            .attr("fill", d => d3.interpolateRgb("#f5f8fe", "#007791")(d.value / -100));
+
+        wrapper_area.selectAll("rect.dark")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("class", "dark")
+            .attr("x", (d, i) => (i % 6) * (boxSize + paddingX))
+            .attr("y", (d, i) => Math.floor(i / 6) * (boxSize + paddingY) + boxSize * (1 - d.line))
+            .attr("width", boxSize)
+            .attr("height", d => boxSize * d.line)
+            .attr("fill", "none")
+            .attr("stroke", "black")
+            .attr("stroke-width", 1);
+
+        wrapper_area.selectAll("line.dotted")
+            .data(data)
+            .enter()
+            .append("line")
+            .attr("class", "dotted")
+            .attr("x1", (d, i) => (i % 6) * (boxSize + paddingX))
+            .attr("x2", (d, i) => (i % 6) * (boxSize + paddingX) + boxSize)
+            .attr("y1", (d, i) => Math.floor(i / 6) * (boxSize + paddingY) + boxSize * (1 - d.dotted))
+            .attr("y2", (d, i) => Math.floor(i / 6) * (boxSize + paddingY) + boxSize * (1 - d.dotted))
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
+            .attr("stroke-dasharray", "4 2")
+
+        // Add labels
+        wrapper_area.selectAll("text")
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("x", (d, i) => (i % 6) * (boxSize + paddingX) + boxSize / 2)
+            .attr("y", (d, i) => Math.floor(i / 6) * (boxSize + paddingY) + boxSize * (1 - d.fill / 2))
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle")
+            .attr("fill", "white")
+            .text(d => `${Math.abs(d.value)}%`)
+            .attr("font-weight", "600");
+            
+            wrapper_area.selectAll(".name")
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("class", "name")
+            .attr("x", (d, i) => (i % 6) * (boxSize + paddingX) + boxSize / 2)
+            .attr("y", (d, i) => Math.floor(i / 6) * (boxSize + paddingY) - 10)
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle")
+            .attr("fill", "black")
+            .style("font-size", "14px")
+            .html(d => {
+                return d.name.replace(/hm3/, 'hm<tspan dy="-5" font-size="10px">3</tspan>');
+            })
+
+
+        // Draw legend
+        const legendSize = 80;
+        const legend = d3.select("#legend-container")
+            .append("svg")
+            .attr("width", legendSize + 180) 
+            .attr("height", legendSize + 50);
+
+        legend.append("rect")
+            .attr("x", 10)
+            .attr("y", 10)
+            .attr("width", legendSize)
+            .attr("height", legendSize)
+            .attr("fill", "#ccc")
+            .attr("stroke", "#b3b3b3");
+
+        legend.append("rect")
+            .attr("x", 10)
+            .attr("y", 2 + legendSize * 0.6)
+            .attr("width", legendSize)
+            .attr("height", legendSize * 0.50)
+            .attr("fill", d3.interpolateRgb("#f5f8fe", "#007791")(0.6));
+
+        legend.append("line")
+            .attr("x1", 10)
+            .attr("x2", 10 + legendSize)
+            .attr("y1", 10 + legendSize * 0.35)
+            .attr("y2", 10 + legendSize * 0.35)
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
+            .attr("stroke-dasharray", "4 2");
+
+        legend.append("rect")
+            .attr("x", 10)
+            .attr("y", 10 + legendSize * 0.15)
+            .attr("width", legendSize)
+            .attr("height", legendSize * 0.85)
+            .attr("fill", "none")
+            .attr("stroke", "black")
+            .attr("stroke-width", 1);
+
+        legend.append("text")
+            .attr("x", 10 + legendSize / 2)
+            .attr("y", 10 + legendSize / 1.35)
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle")
+            .attr("fill", "white")
+            .style("font-size", "12px")
+            .text("50%");
+
+        legend.append("line")
+            .attr("x1", 10 + legendSize + 10)
+            .attr("x2", 10 + legendSize + 30)
+            .attr("y1", 10 + legendSize * 0.72)
+            .attr("y2", 10 + legendSize * 0.72)
+            .attr("stroke", "black")
+            .attr("marker-end", "url(#arrow)");
+
+        legend.append("text")
+            .attr("x", 10 + legendSize + 40)
+            .attr("y", 10 + legendSize * 0.72 + 5)
+            .text("June 18, 2024")
+            .style("font-size", "12px")
+            .attr("fill", "black");
+
+        legend.append("line")
+            .attr("x1", 10 + legendSize + 10)
+            .attr("x2", 10 + legendSize + 30)
+            .attr("y1", 10 + legendSize * 0.16)
+            .attr("y2", 10 + legendSize * 0.16)
+            .attr("stroke", "black")
+            .attr("marker-end", "url(#arrow)");
+
+        legend.append("text")
+            .attr("x", 10 + legendSize + 40)
+            .attr("y", 10 + legendSize * 0.16 + 5)
+            .text("Maximum (since 1988)")
+            .style("font-size", "12px")
+            .attr("fill", "black");
+
+        legend.append("line")
+            .attr("x1", 10 + legendSize + 10)
+            .attr("x2", 10 + legendSize + 30)
+            .attr("y1", 10 + legendSize * 0.35)
+            .attr("y2", 10 + legendSize * 0.35)
+            .attr("stroke", "black")
+            .attr("marker-end", "url(#arrow)");
+
+        legend.append("text")
+            .attr("x", 10 + legendSize + 40)
+            .attr("y", 10 + legendSize * 0.35 + 5)
+            .text("Average (since 1988)")
+            .style("font-size", "12px")
+            .attr("fill", "black");
+
+        legend.append("defs")
+            .append("marker")
+            .attr("id", "arrow")
+            .attr("viewBox", "0 0 10 10")
+            .attr("refX", 5)
+            .attr("refY", 5)
+            .attr("markerWidth", 6)
+            .attr("markerHeight", 6)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M 0 0 L 10 5 L 0 10 Z")
+            .attr("fill", "black");
+    </script>
+</body>
+
+</html>
