@@ -55,3 +55,14 @@ For more information about the challenge, you can visit the [official repository
 ### Day 16
 ![Challenge 16](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V16/area.png)
 
+### Day 17
+![Challenge 17](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V17/beeswam.png)
+
+### Day 18
+![Challenge 18](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V18/area.png)
+
+### Day 19
+![Challenge 19](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V19/line.png)
+
+### Day 20
+![Challenge 20](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V20/stacked.png)
