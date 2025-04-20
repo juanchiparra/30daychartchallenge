@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Smooth</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="line.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Smooth</h1>
+            <span class="date">April 19, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>Average weather patterns in London <span>(2024)</span></h2>
+
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a href="https://rp5.ru/Weather_in_London,_UK" class="external">rp5</a></p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { data } from './line.js';
+
+        // Chart dimensions
+        const margin = { top: 0, right: 30, bottom: 0, left: 80 };
+        const width = 1200 - margin.left - margin.right;
+        const height = 700 - margin.top - margin.bottom;
+
+        // Draw canvas
+        const wrapper_line = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Create scales
+        const xScale = d3.scaleTime()
+            .domain(d3.extent(data, d => d.date))
+            .range([0, width]);
+
+        const yScale = d3.scaleLinear()
+            .domain([d3.min(data, d => d.temperature) - 2, d3.max(data, d => d.temperature)])
+            .range([height, 0]);
+
+        // Draw peripherals
+        wrapper_line.append("g")
+            .attr("transform", "translate(-40, 0)")
+            .attr("class", "axis-y")
+            .call(d3.axisLeft(yScale).ticks(5).tickFormat(d => d + "°C"))
+            .selectAll("text")
+            .style("font-size", "12px")
+            .style("fill", "#d3d3d3");
+
+        wrapper_line.selectAll(".grid")
+            .data(yScale.ticks(5))
+            .enter()
+            .append("line")
+            .attr("class", "grid")
+            .attr("x1", -30)
+            .attr("x2", width)
+            .attr("y1", d => yScale(d))
+            .attr("y2", d => yScale(d))
+            .attr("stroke", "#d3d3d3")
+            .attr("stroke-width", 1)
+            .attr("stroke-dasharray", "4,4");
+
+        // Draw data
+        const line = d3.line()
+            .x(d => xScale(d.date))
+            .y(d => yScale(d.temperature))
+            .curve(d3.curveBasis);
+
+        wrapper_line.append("path")
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "#648d89")
+            .attr("stroke-width", 2)
+            .attr("d", line);
+
+        wrapper_line.selectAll("circle")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("cx", d => xScale(d.date))
+            .attr("cy", d => yScale(d.temperature))
+            .attr("r", 2)
+            .attr("fill", "#648d89")
+            .attr("opacity", 0.5);
+
+        // Add labels
+        const firstPoint = data[0];
+        const lastPoint = data[data.length - 1];
+
+        wrapper_line.append("text")
+            .attr("x", xScale(lastPoint.date))
+            .attr("y", yScale(lastPoint.temperature) + 16)
+            .attr("text-anchor", "end")
+            .attr("fill", "#648d89")
+            .style("font-size", "16px")
+            .style("font-weight", "bold")
+            .text("Jan");
+
+        wrapper_line.append("text")
+            .attr("x", xScale(firstPoint.date))
+            .attr("y", yScale(firstPoint.temperature) + 16)
+            .attr("text-anchor", "start")
+            .attr("fill", "#648d89")
+            .style("font-size", "15px")
+            .style("font-weight", "bold")
+            .text("Dec");
+    </script>
+</body>
+
+</html>
