@@ -66,3 +66,6 @@ For more information about the challenge, you can visit the [official repository
 
 ### Day 20
 ![Challenge 20](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V20/stacked.png)
+
+### Day 21
+![Challenge 21](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V21/area.png)
