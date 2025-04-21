@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Fossils</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="area.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Fossils</h1>
+            <span class="date">April 21, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>U.S. primary energy production from fossil fuels</h2>
+            <p class="description">Primary energy production involves the extraction or capture of energy resources in
+                their natural state. In the United States, the main sources of fossil fuels include coal, natural gas,
+                and crude oil, each of which plays a significant role in the overall energy supply.</p>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a
+                        href="https://www.eia.gov/totalenergy/data/browser/index.php?tbl=T01.02#/?f=A&start=1949&end=2024&charted=1-2-3-4-6-13"
+                        class="external">EIA</a></p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { data } from './area.js';
+
+        // Chart dimensions
+        const margin = { top: 30, right: 30, bottom: 40, left: 70 };
+        const width = 1100 - margin.left - margin.right;
+        const height = 700 - margin.top - margin.bottom;
+
+        // Draw canvas
+        const wrapper_area = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Transform data
+        const sumData = d3.rollups(
+            data,
+            v => d3.sum(v, d => d.Value),
+            d => d.Date,
+            d => d.Name
+        ).flatMap(([Date, groups]) =>
+            Array.from(groups, ([Name, Value]) => ({ Date, Name, Value }))
+        );
+
+        const keys = Array.from(new Set(sumData.map(d => d.Name)));
+
+        const groupedData = d3.rollups(
+            sumData,
+            v => {
+                const total = d3.sum(v, d => d.Value);
+                return Object.fromEntries(v.map(d => [d.Name, (d.Value / total) * 100]))
+            },
+            d => d.Date
+        ).map(([Date, values]) => {
+            keys.forEach(key => {
+                if (!values[key]) values[key] = 0;
+            });
+            return { Date, ...values };
+        }).sort((a, b) => new Date(a.Date) - new Date(b.Date));
+
+        const stackedData = d3.stack()
+            .keys(keys)
+            .value((d, key) => d[key])
+            (groupedData);
+
+        // Create scales
+        const xScale = d3.scaleTime()
+            .domain(d3.extent(data, d => new Date(d.Date)))
+            .range([0, width]);
+
+        const yScale = d3.scaleLinear()
+            .domain([0, 100])
+            .range([height, 0])
+
+        const colorScale = d3.scaleOrdinal()
+            .domain(keys)
+            .range(["#474646", "#d1d5db", "#f0ece8"]);
+
+        // Draw data
+        const area = d3.area()
+            .x(d => xScale(new Date(d.data.Date)))
+            .y0(d => yScale(d[0]))
+            .y1(d => yScale(d[1]));
+
+        wrapper_area.selectAll("path")
+            .data(stackedData)
+            .enter()
+            .append("path")
+            .attr("fill", d => colorScale(d.key))
+            .attr("stroke", "black")
+            .attr("stroke-width", 0.5)
+            .attr("d", area);
+
+        // Draw peripherals
+        wrapper_area.append("g")
+            .attr("class", "axis-x")
+            .attr("transform", `translate(0,${height - 8})`)
+            .call(d3.axisBottom(xScale).ticks(5).tickFormat(d3.timeFormat("%Y")))
+            .selectAll("text")
+            .style("font-family", "'Roboto Mono', monospace")
+            .style("font-size", "14px")
+            .attr("dy", "1em");
+
+        wrapper_area.append("g")
+            .attr("class", "axis-y")
+            .call(d3.axisLeft(yScale).ticks(4).tickFormat(d => `${d}%`))
+            .selectAll("text")
+            .style("font-family", "'Roboto Mono', monospace")
+            .style("font-size", "14px");
+
+        wrapper_area.append("text")
+            .attr("class", "label")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -height / 2)
+            .attr("y", -margin.left + 8)
+            .attr("text-anchor", "middle")
+            .style("font-family", "'Roboto Mono', monospace")
+            .style("font-size", "12px")
+            .style("fill", "grey")
+            .text("Total energy distribution (%)");
+
+        // Add legend
+        const legend = wrapper_area.append("g")
+            .attr("transform", `translate(0, -30)`);
+
+        let currentX = 0;
+
+        keys.forEach((key, i) => {
+            const legendGroup = legend.append("g")
+                .attr("transform", `translate(${currentX}, 0)`);
+
+            legendGroup.append("rect")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", 15)
+                .attr("height", 15)
+                .attr("fill", colorScale(key))
+                .attr("stroke", "black")
+                .attr("stroke-width", 1);
+
+            const text = legendGroup.append("text")
+                .attr("x", 20)
+                .attr("y", 9)
+                .text(key)
+                .style("font-size", "14px")
+                .style("font-family", "'Roboto Mono', monospace")
+                .attr("alignment-baseline", "middle");
+
+            const textWidth = text.node().getBBox().width;
+            currentX += 15 + 5 + textWidth + 20;
+        });
+
+        const legendWidth = currentX;
+        legend.attr("transform", `translate(${(width - legendWidth) / 2}, -30)`);
+    </script>
+</body>
+
+</html>
