@@ -69,3 +69,7 @@ For more information about the challenge, you can visit the [official repository
 
 ### Day 21
 ![Challenge 21](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V21/area.png)
+
+### Day 22
+![Challenge 22](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V22/scatter.png)
+
