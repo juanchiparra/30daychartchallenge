@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Stars</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="scatter.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Stars</h1>
+            <span class="date">April 22, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>Understanding the stars</h2>
+            <p class="description">Not all stars shine with the same brightness or color. To better understand stars, we
+                can use the color index (B-V), which measures a star's temperature, and its apparent brightness (mag),
+                which indicates how bright the star appears from Earth.
+            </p>
+            <button id="filter">Switch stars</button>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a href="https://heasarc.gsfc.nasa.gov/W3Browse/star-catalog/bsc5p.html"
+                        class="external">NASA</a></p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { data } from './scatter.js';
+
+        const filteredData = data.filter(d => d.B_V !== "" && d.Vmag !== "" && !isNaN(d.B_V) && !isNaN(d.Vmag) && d.B_V !== "#ERROR!");
+
+        // Chart dimensions
+        const margin = { top: 30, right: 30, bottom: 40, left: 70 };
+        const width = 1100 - margin.left - margin.right;
+        const height = 500 - margin.top - margin.bottom;
+
+        // Draw canvas
+        const wrapper_scatter = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Create scales
+        const xScale = d3.scaleLinear()
+            .domain([0, d3.max(filteredData, d => d.B_V)])
+            .range([0, width]);
+
+        const yScale = d3.scaleLinear()
+            .domain(d3.extent(filteredData, d => d.Vmag).reverse())
+            .range([0, height]);
+
+        const colorScale = d3.scaleLinear()
+            .domain([-4, 0, 4])
+            .range(["#9bb0ff", "#fff4e8", "#ffcc6f"]);
+
+        function Color(baseColor, Vmag) {
+            const darkFactor = Math.min(2, Vmag / 8);
+            return d3.color(baseColor).darker(darkFactor).toString();
+        }
+
+        // Define glow
+        const defs = wrapper_scatter.append("defs");
+
+        const glow = defs.append("filter")
+            .attr("id", "glow")
+            .attr("filterUnits", "userSpaceOnUse")
+            .attr("x", "-50%")
+            .attr("y", "-50%")
+            .attr("width", "200%")
+            .attr("height", "200%");
+
+        glow.append("feGaussianBlur")
+            .attr("stdDeviation", 3)
+            .attr("result", "coloredBlur");
+
+        glow.append("feMerge")
+            .selectAll("feMergeNode")
+            .data(["coloredBlur", "SourceGraphic"])
+            .enter()
+            .append("feMergeNode")
+            .attr("in", d => d);
+
+        // Draw peripherals
+        wrapper_scatter.append("text")
+            .attr("x", width / 2 - 75)
+            .attr("y", 0)
+            .attr("class", "legend-text")
+            .text("Color index (B-V) →");
+
+        wrapper_scatter.append("text")
+            .attr("x", -height / 2 - 40)
+            .attr("y", -40)
+            .attr("transform", "rotate(-90)")
+            .attr("class", "legend-text")
+            .text("← Apparent brightness (mag)");
+
+        // Draw data
+        function updateChart(filteredData) {
+            const simulation = d3.forceSimulation(filteredData)
+                .force("x", d3.forceX(d => xScale(d.B_V)).strength(1))
+                .force("y", d3.forceY(d => yScale(d.Vmag)).strength(1))
+                .force("collision", d3.forceCollide(4))
+                .stop();
+
+            for (let i = 0; i < 300; i++) simulation.tick();
+
+            const circles = wrapper_scatter.selectAll("circle")
+                .data(filteredData, d => d.Name);
+
+            circles.exit().remove();
+
+            circles
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+                .attr("r", 3)
+                .attr("fill", d => {
+                    const baseColor = colorScale(d.B_V);
+                    return Color(baseColor, d.Vmag);
+                })
+                .style("filter", "url(#glow)");
+
+            circles.enter()
+                .append("circle")
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+                .attr("r", 3)
+                .attr("fill", d => {
+                    const baseColor = colorScale(d.B_V);
+                    return Color(baseColor, d.Vmag);
+                })
+                .style("filter", d => `url(#glow) opacity(${1 - d.Vmag / 20})`)
+                .on("mouseover", (event, d) => {
+                    const tooltip = d3.select("body").append("div")
+                        .attr("class", "tooltip")
+                        .style("left", `${event.pageX + 10}px`)
+                        .style("top", `${event.pageY + 10}px`)
+                        .html(`<b>${d.Name || "Unnamed"}</b><br><b>B-V:</b> ${d.B_V}<br><b>Vmag:</b> ${d.Vmag}<br><b>SpType:</b> ${d.SpType}`);
+                })
+                .on("mouseout", () => {
+                    d3.select(".tooltip").remove();
+                });
+        }
+
+        // Add button
+        function getRandom(filteredData, zones, countsPerZone) {
+            const groupedData = zones.map(([min, max]) =>
+                filteredData.filter(d => d.B_V >= min && d.B_V < max)
+            );
+
+            const randomData = groupedData.flatMap((group, index) =>
+                d3.shuffle(group).slice(0, countsPerZone[index])
+            );
+
+            return randomData;
+        }
+
+        const zones = [
+            [0, 2],
+            [2, 6]
+        ];
+        const countsPerZone = [200, 20];
+
+        const initialData = getRandom(
+            filteredData,
+            zones,
+            countsPerZone
+        );
+        updateChart(initialData);
+
+        d3.select("#filter").on("click", () => {
+            const randomData = getRandom(
+                filteredData,
+                zones,
+                countsPerZone
+            );
+            updateChart(randomData);
+        });
+    </script>
+</body>
+
+</html>
