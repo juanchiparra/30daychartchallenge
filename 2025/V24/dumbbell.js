@@ -1,0 +1,21 @@
+export const data = [
+    { category: 'Chile', value1: (39 + 49) / 2, value2: (24 + 28) / 2 },
+    { category: 'Colombia', value1: (7 + 19) / 2, value2: (4 + 11) / 2 },
+    { category: 'Costa Rica', value1: (9 + 22) / 2, value2: (4 + 12) / 2 },
+    { category: 'Cuba', value1: (26 + 44) / 2, value2: (9 + 24) / 2 },
+    { category: 'Dominican Republic', value1: (9 + 14) / 2, value2: (4 + 10) / 2 },
+    { category: 'Ecuador', value1: (5 + 19) / 2, value2: (2 + 15) / 2 },
+    { category: 'El Salvador', value1: (3 + 23) / 2, value2: (2 + 14) / 2 },
+    { category: 'Guatemala', value1: (3 + 22) / 2, value2: (1 + 20) / 2 },
+    { category: 'Guyana', value1: (5 + 45) / 2, value2: (2 + 17) / 2 },
+    { category: 'Haiti', value1: (4 + 13) / 2, value2: (2 + 11) / 2 },
+    { category: 'Honduras', value1: (3 + 29) / 2, value2: (2 + 20) / 2 },
+    { category: 'Jamaica', value1: (7 + 22) / 2, value2: (3 + 14) / 2 },
+    { category: 'Mexico', value1: (11 + 31) / 2, value2: (6 + 21) / 2 },
+    { category: 'Panama', value1: (4 + 18) / 2, value2: (2 + 7) / 2 },
+    { category: 'Paraguay', value1: (11 + 35) / 2, value2: (3 + 14) / 2 },
+    { category: 'Peru', value1: (12 + 52) / 2, value2: (2 + 11) / 2 },
+    { category: 'Saint Lucia', value1: (6 + 27) / 2, value2: (2 + 21) / 2 },
+    { category: 'U.S.', value1: (21 + 27) / 2, value2: (14 + 18) / 2 },
+    { category: 'Uruguay', value1: (25 + 38) / 2, value2: (15 + 21) / 2 }
+];

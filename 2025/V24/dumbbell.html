@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>World Health Organization</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="dumbbell.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>World Health Organization</h1>
+            <span class="date">April 24, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>Cigarettes are losing popularity</h2>
+            <p class="description">For years, cigarettes have dominated the market. However, their consumption has been declining, primarily due to changes in habits, the emergence of alternative tobacco options, and the rise of electronic cigarettes. This trend has been particularly noticeable in several countries across the Americas,  based on WHO estimates studying cigarette smoking rates among adults.</p>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a href="https://www.who.int/data/inequality-monitor/data" class="external">WHO</a></p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { data } from './dumbbell.js';
+
+        data.sort((a, b) => b.value1 - a.value1);
+
+        // Chart dimensions
+        const margin = { top: 30, right: 30, bottom: 50, left: 130 };
+        const width = 1100 - margin.left - margin.right;
+        const height = 600 - margin.top - margin.bottom;
+
+        // Draw canvas
+        const wrapper_dumbbell = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Create scales
+        const xScale = d3.scaleLinear()
+            .domain([0, 50])
+            .range([0, width]);
+
+        const yScale = d3.scaleBand()
+            .domain(data.map(d => d.category))
+            .range([0, height])
+            .paddingInner(0.1)
+            .paddingOuter(0);
+
+        // Draw peripherals
+        wrapper_dumbbell.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0, ${height})`)
+            .call(d3.axisBottom(xScale).ticks(4).tickFormat(d => `${d}%`))
+            .selectAll("text")
+            .style("font-family", "'Roboto Mono', monospace")
+            .style("font-size", "12px");
+
+        wrapper_dumbbell.append("g")
+            .attr("class", "y-axis")
+            .call(d3.axisLeft(yScale))
+            .selectAll("text")
+            .style("font-family", "'Roboto Mono', monospace")
+            .style("font-size", "12px");
+
+       // Draw data
+        wrapper_dumbbell.selectAll(".line")
+            .data(data)
+            .enter()
+            .append("line")
+            .attr("x1", d => xScale(d.value1) - 3)
+            .attr("x2", d => xScale(d.value2) + (Math.abs(d.value2 - d.value1) < 4 ? 15 : 50))
+            .attr("y1", d => yScale(d.category) + yScale.bandwidth() / 2)
+            .attr("y2", d => yScale(d.category) + yScale.bandwidth() / 2)
+            .attr("stroke", "#f0f2ee")
+            .attr("stroke-width", "14px");
+
+        wrapper_dumbbell.selectAll(".line1")
+            .data(data)
+            .enter()
+            .append("line")
+            .attr("x1", d => xScale(d.value1) - 5)
+            .attr("x2", d => xScale(d.value1) - 2)
+            .attr("y1", d => yScale(d.category) + yScale.bandwidth() / 2)
+            .attr("y2", d => yScale(d.category) + yScale.bandwidth() / 2)
+            .attr("stroke", "#ea3a28")
+            .attr("stroke-width", "14px");
+
+        wrapper_dumbbell.selectAll(".line2")
+            .data(data)
+            .enter()
+            .append("line")
+            .attr("x1", d => xScale(d.value2) - 5)
+            .attr("x2", d => xScale(d.value2) + (Math.abs(d.value2 - d.value1) < 4 ? 15 : 50))
+            .attr("y1", d => yScale(d.category) + yScale.bandwidth() / 2)
+            .attr("y2", d => yScale(d.category) + yScale.bandwidth() / 2)
+            .attr("stroke", "#ea9b28")
+            .attr("stroke-width", "14px");
+
+        // Add labels
+        wrapper_dumbbell.selectAll(".value1-label")
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("x", d => xScale(d.value2) - 10)
+            .attr("y", d => yScale(d.category) + yScale.bandwidth() / 2)
+            .attr("dy", "0.35em")
+            .attr("text-anchor", "end")
+            .text(d => `-${Math.abs(d.value2 - d.value1)}%`)
+            .attr("font-size", "10px")
+            .attr("font-family", "'Roboto Mono', monospace")
+            .attr("fill", "#707070")
+            .attr("font-weight", "500");
+
+        // Add legend
+        const legend = wrapper_dumbbell.append("g")
+            .attr("class", "legend")
+            .attr("transform", `translate(${width / 2 - 100}, -30)`);
+
+        legend.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", 14)
+            .attr("height", 14)
+            .attr("fill", "#ea3a28");
+
+        legend.append("text")
+            .attr("x", 20)
+            .attr("y", 9)
+            .text("2000")
+            .attr("fill", "#d7d7d7")
+            .attr("font-size", "11px")
+            .attr("font-family", "'Roboto Mono', monospace")
+            .attr("alignment-baseline", "middle");
+
+        legend.append("rect")
+            .attr("x", 100)
+            .attr("y", 1)
+            .attr("width", 14)
+            .attr("height", 14)
+            .attr("fill", "#ea9b28");
+
+        legend.append("text")
+            .attr("x", 120)
+            .attr("y", 9)
+            .text("2022")
+            .attr("fill", "#d7d7d7")
+            .attr("font-size", "11px")
+            .attr("font-family", "'Roboto Mono', monospace")
+            .attr("alignment-baseline", "middle");
+    </script>
+</body>
+
+</html>
