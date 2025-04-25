@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Log Scale</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="area.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Log Scale</h1>
+            <span class="date">April 23, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>Confirmed cases of COVID-19 in Venezuela <span>(2020-2023)</span></h2>
+            </p>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a href="https://ourworldindata.org/covid-cases" class="external">Our World in Data</a>
+                </p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { data } from './area.js';
+
+        const filteredData = data.filter(d => d.value >= 0.1);
+
+        // Add formatting
+        const parseDate = d3.timeParse("%Y-%m-%d");
+        filteredData.forEach(d => d.date = parseDate(d.date));
+
+        // Chart dimensions
+        const margin = { top: 30, right: 30, bottom: 38, left: 70 };
+        const width = 1100 - margin.left - margin.right;
+        const height = 600 - margin.top - margin.bottom;
+
+        // Draw canvas
+        const wrapper_area = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Create scales
+        const xScale = d3.scaleTime()
+            .domain(d3.extent(filteredData, d => d.date))
+            .range([0, width]);
+
+        const yScale = d3.scaleLog()
+            .domain([0.1, d3.max(filteredData, d => d.value)])
+            .range([height, 0])
+            .nice();
+
+        // Draw data
+        const area = d3.area()
+            .x(d => xScale(d.date))
+            .y0(height)
+            .y1(d => yScale(d.value))
+            .curve(d3.curveMonotoneX);
+
+        wrapper_area.append("path")
+            .datum(filteredData)
+            .attr("fill", "#731a46")
+            .attr("opacity", 1)
+            .attr("d", area);
+
+        // Draw peripherals
+        wrapper_area.append("g")
+            .attr("class", "axis-x")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(xScale).ticks(3).tickFormat(d3.timeFormat("%Y-%m")))
+            .selectAll("text")
+            .style("text-anchor", "end")
+            .style("font-family", "'Roboto Mono', monospace")
+            .style("font-size", "12px");
+
+        wrapper_area.append("g")
+            .attr("class", "axis-y")
+            .call(d3.axisLeft(yScale).ticks(5, ""))
+            .selectAll("text")
+            .style("font-family", "'Roboto Mono', monospace")
+            .style("font-size", "12px");
+
+        // Add labels
+        wrapper_area.append("text")
+            .attr("class", "label")
+            .attr("x", -height / 2)
+            .attr("y", -margin.left + 10)
+            .attr("transform", "rotate(-90)")
+            .attr("text-anchor", "middle")
+            .style("font-family", "'Roboto Mono', monospace")
+            .style("font-size", "12px")
+            .style("fill", "grey")
+            .text("Confirmed cases per million people");
+    </script>
+</body>
+
+</html>
