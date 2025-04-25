@@ -73,3 +73,9 @@ For more information about the challenge, you can visit the [official repository
 ### Day 22
 ![Challenge 22](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V22/scatter.png)
 
+### Day 23
+![Challenge 23](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V23/area.png)
+
+### Day 24
+![Challenge 24](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V24/dumbbell.png)
+
