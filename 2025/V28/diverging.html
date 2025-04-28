@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Inclusion</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="diverging.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Inclusion</h1>
+            <span class="date">April 28, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>Self-reported unmet need for medical care <span>(2024)</span></h2>
+            <p class="description">The European Union identifies the primary reasons for unmet medical needs among
+                individuals aged 16 and older as high costs, excessive travel distances, and long waiting lists. In
+                certain EU countries, nearly 10% of the total population experiences these unmet medical needs.</p>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a
+                        href="https://ec.europa.eu/eurostat/databrowser/view/TESPM110__custom_1858549/bookmark/table?lang=en&bookmarkId=9d3e451b-d990-4eaa-8bf7-9144ea1514de"
+                        class="external">Eurostat</a></p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { data } from './diverging.js';
+
+        // Chart dimensions
+        const margin = { top: 60, right: 10, bottom: 40, left: 10 };
+        const width = 1200 - margin.left - margin.right;
+        const height = 760 - margin.top - margin.bottom;
+        const middle = 100;
+
+        // Draw canvas
+        const wrapper_diverging = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Create scales
+        const yScale = d3.scaleBand()
+            .domain(data.map(d => d.country))
+            .range([0, height])
+            .padding(0.1);
+
+        const x1Scale = d3.scaleLinear()
+            .domain([0, 11])
+            .nice()
+            .range([(width - middle) / 2, 0]);
+
+        const x2Scale = d3.scaleLinear()
+            .domain([0, 11])
+            .nice()
+            .range([0, (width - middle) / 2]);
+
+        // Draw peripherals
+        wrapper_diverging.append("g")
+            .attr("class", "grid")
+            .call(d3.axisTop(x1Scale).ticks(5)
+                .tickSize(-height)
+                .tickFormat('')
+                .tickValues(x1Scale.ticks(5).slice(1)))
+            .selectAll("line")
+            .style("opacity", 0.5);
+
+        wrapper_diverging.append("g")
+            .attr("class", "grid")
+            .attr("transform", `translate(${(width + middle) / 2},0)`)
+            .call(d3.axisTop(x2Scale).ticks(5)
+                .tickSize(-height)
+                .tickFormat('')
+                .tickValues(x2Scale.ticks(5).slice(1)))
+            .selectAll("line")
+            .style("opacity", 0.5);
+
+        wrapper_diverging.append("line")
+            .attr("x1", width / 2 + 50)
+            .attr("x2", width / 2 + 50)
+            .attr("y1", 0)
+            .attr("y2", height)
+            .attr("stroke", "black")
+            .attr("stroke-width", 2);
+
+        wrapper_diverging.append("line")
+            .attr("x1", width / 2 - 50)
+            .attr("x2", width / 2 - 50)
+            .attr("y1", 0)
+            .attr("y2", height)
+            .attr("stroke", "black")
+            .attr("stroke-width", 2);
+
+        wrapper_diverging.append("text")
+            .attr("x", (width - middle) / 4 + 20)
+            .attr("y", -30)
+            .attr("text-anchor", "middle")
+            .style("font-size", "18px")
+            .style("font-weight", "bold")
+            .text("Male");
+
+        wrapper_diverging.append("text")
+            .attr("x", (width + middle) / 2 + (width - middle) / 4 - 30)
+            .attr("y", -30)
+            .attr("text-anchor", "middle")
+            .style("font-size", "18px")
+            .style("font-weight", "bold")
+            .text("Female");
+
+        wrapper_diverging.append("g")
+            .attr("class", "x-axis")
+            .call(d3.axisTop(x1Scale).ticks(5).tickFormat(d => `${d}%`));
+
+        wrapper_diverging.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(${(width + middle) / 2},0)`)
+            .call(d3.axisTop(x2Scale).ticks(5).tickFormat(d => `${d}%`));
+            
+        wrapper_diverging.selectAll(".x-axis .domain")
+            .style("display", "none");
+
+        wrapper_diverging.append("g")
+            .attr("class", "c-axis")
+            .attr("transform", `translate(${(width) / 2 - 8})`)
+            .call(d3.axisRight(yScale));
+
+        // Draw data
+        wrapper_diverging.selectAll(".bar1")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x1Scale(d.male))
+            .attr("y", d => yScale(d.country))
+            .attr("width", d => x1Scale(0) - x1Scale(d.male))
+            .attr("height", "22")
+            .attr("fill", "#00c4aa");
+
+        wrapper_diverging.selectAll(".bar1")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x1Scale(d.male))
+            .attr("y", d => yScale(d.country))
+            .attr("width", d => x1Scale(0) - x1Scale(d.male))
+            .attr("height", "22")
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
+            .attr("fill", "none")
+
+        wrapper_diverging.selectAll(".bar2")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => (width + middle) / 2)
+            .attr("y", d => yScale(d.country))
+            .attr("width", d => x2Scale(d.female))
+            .attr("height", "22")
+            .attr("fill", "#8701f9");
+
+        wrapper_diverging.selectAll(".bar2")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => (width + middle) / 2)
+            .attr("y", d => yScale(d.country))
+            .attr("width", d => x2Scale(d.female))
+            .attr("height", "22")
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
+            .attr("fill", "none")
+    </script>
+</body>
+
+</html>
