@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Monochrome</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="map.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Monochrome</h1>
+            <span class="date">April 26, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>Where violence strikes: <span class="title">the states with the highest death toll in mass shootings in
+                    the
+                    United States</span></h2>
+            <p class="description">According to data from The Violence Project, from 1966 to 2024, there have been 200
+                mass shootings in the United States, resulting in the deaths of more than 1,438 people.
+            </p>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a href="https://www.theviolenceproject.org/mass-shooter-database/" class="external">The
+                        Violence Project</a>
+                </p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        import { data } from './map.js';
+
+        // Chart dimensions
+        const cellSize = 60;
+        const numCols = d3.max(data, d => d.col) + 1;
+        const numRows = d3.max(data, d => d.row) + 2;
+        const gridWidth = numCols * cellSize;
+        const gridHeight = numRows * cellSize;
+
+        const width = 1200;
+        const height = 520;
+
+        const margin = {
+            top: (height - gridHeight) / 2,
+            left: (width - gridWidth) / 2
+        };
+
+        // Draw canvas
+        const wrapper_map = d3.select("#container1")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // Draw data
+        wrapper_map.selectAll(".state")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "state")
+            .attr("x", d => d.col * cellSize + margin.left)
+            .attr("y", d => d.row * cellSize + margin.top)
+            .attr("width", cellSize)
+            .attr("height", cellSize)
+            .attr("fill", d => d.killed > 0 ? d3.interpolateRgb("#bcbcbc", "#242424")(d.killed / d3.max(data, d => d.killed)) : "#fdfdfd")
+            .attr("stroke", "#242424")
+            .attr("stroke-width", 1);
+
+        // Add labels
+        wrapper_map.selectAll(".state-label")
+            .data(data)
+            .enter().append("text")
+            .attr("class", "state-label")
+            .attr("x", d => d.col * cellSize + cellSize / 2 + margin.left)
+            .attr("y", d => d.row * cellSize + cellSize / 2 + margin.top)
+            .attr("fill", d => d.killed > 150 ? "#fdfdfd" : "#242424")
+            .attr("text-anchor", "middle")
+            .attr("alignment-baseline", "middle")
+            .text(d => d.abbr);
+            
+        wrapper_map.selectAll(".killed-label")
+            .data(data)
+            .enter().append("text")
+            .attr("class", "killed-label")
+            .attr("x", d => d.col * cellSize + cellSize / 2 + margin.left)
+            .attr("y", d => d.row * cellSize + cellSize / 2 + margin.top + 15)
+            .attr("fill", d => d.killed > 150 ? "#fdfdfd" : "#242424")
+            .attr("text-anchor", "middle")
+            .attr("alignment-baseline", "middle")
+            .attr("font-size", "10px")
+            .text(d => d.killed > 0 ? d.killed : "");
+    </script>
+</body>
+
+</html>
