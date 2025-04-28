@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Noise</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="beeswam.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Noise</h1>
+            <span class="date">April 27, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>Citizen-initiated noise complaints in Montgomery County</h2>
+            <p class="description"></p>
+            <div id="container1" class="container">In 2024, Montgomery County, Maryland recorded a total of 528 noise
+                complaints submitted through web forms and the 311 system (live agent assistance). The data categorizes
+                complaints into two primary types: residential (R) and commercial/industrial (C). The record also
+                includes noise-related waiver requests and information requests.</div>
+            <div class="footer">
+                <p><b>Data:</b> <a
+                        href="https://data.montgomerycountymd.gov/Environment/Noise-Complaints/pv7j-pdxw/about_data"
+                        class="external">Montgomery County</a></p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Access data
+        import { data } from './beeswam.js';
+
+        // Add formatting
+        const parseDate = d3.timeParse("%m/%d/%Y");
+        data.forEach(d => {
+            d.open = parseDate(d.open);
+            d.close = parseDate(d.close);
+        });
+
+        // Chart dimensions
+        const margin = { top: 10, right: 10, bottom: 20, left: 70 };
+        const width = 1200 - margin.left - margin.right;
+        const height = 700 - margin.top - margin.bottom;
+
+        // Draw canvas
+        const wrapper_beeswarm = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Draw tooltip
+        const tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip");
+
+        // Create scales
+        const type = d3.rollups(
+            data,
+            v => v.length,
+            d => d.type
+        ).sort((b, a) => b[1] - a[1]);
+
+        const yScale = d3.scaleBand()
+            .domain(type.map(d => d[0]))
+            .range([height - margin.bottom, margin.top])
+            .padding(0.2);
+
+        const xScale = d3.scaleTime()
+            .domain(d3.extent(data, d => d.open))
+            .range([margin.left + 20, width - margin.right]);
+
+        /// Draw peripherals
+        const yGrid = d3.axisLeft(yScale)
+            .tickSize(-width + margin.left + margin.right)
+            .tickFormat('');
+
+        wrapper_beeswarm.append("g")
+            .attr("class", "grid")
+            .attr("transform", `translate(${margin.left},0)`)
+            .call(yGrid);
+
+        const yAxis = d3.axisLeft(yScale)
+            .tickSize(0);
+
+        wrapper_beeswarm.append("g")
+            .attr("class", "axis")
+            .attr("transform", `translate(${margin.left},0)`)
+            .call(yAxis);
+
+        const xAxis = d3.axisBottom(xScale)
+            .tickSize(0);
+
+        wrapper_beeswarm.append("g")
+            .attr("class", "axis")
+            .attr("transform", `translate(0,${height - margin.bottom})`)
+            .call(xAxis);
+
+        // Draw data
+        const simulation = d3.forceSimulation(data)
+            .force("x", d3.forceX(d => xScale(d.open)).strength(1))
+            .force("y", d3.forceY(d => yScale(d.type) + yScale.bandwidth() / 2).strength(1))
+            .force("collide", d3.forceCollide(6))
+            .stop();
+
+        for (let i = 0; i < 200; ++i) simulation.tick();
+
+        const circles = wrapper_beeswarm.append("g")
+            .selectAll("circle")
+            .data(data)
+            .enter().append("circle")
+            .attr("class", "dot")
+            .attr("r", 5)
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr("fill", "#F06543")
+            .attr("opacity", 1)
+            .on("mouseover", (event, d) => {
+                circles.attr("opacity", 0.2);
+                d3.selectAll(`.dot`).filter(e => e.type === d.type).attr("opacity", 1);
+
+                tooltip.style("opacity", 1)
+                    .html(`<b>Number:</b> ${d.number}<br><b>Type:</b> ${d.type}<br><b>Open:</b> ${d3.timeFormat("%b %d, %Y")(d.open)}<br><b>Close:</b> ${d.close ? d3.timeFormat("%b %d, %Y")(d.close) : 'N/A'}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mousemove", (event) => {
+                tooltip.style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mouseout", () => {
+                circles.attr("opacity", 1);
+
+                tooltip.style("opacity", 0);
+            });
+    </script>
+</body>
+
+</html>
