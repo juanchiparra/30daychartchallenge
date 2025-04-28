@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Risk</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="bubble.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Risk</h1>
+            <span class="date">April 25, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>Unveiling the impact: magnitude and depth in Turkey's earthquakes</span></h2>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a href="https://www.worlddata.info/asia/turkey/earthquakes.php" class="external">World
+                        Data</a>
+                </p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        import { data } from './bubble.js';
+
+        // Chart dimensions
+        const margin = { top: 80, right: 30, bottom: 38, left: 70 };
+        const width = 1200 - margin.left - margin.right;
+        const height = 700 - margin.top - margin.bottom;
+
+        // Draw canvas
+        const wrapper_bubble = d3.select("#container1")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Create scales
+        const xScale = d3.scaleTime()
+            .domain([new Date(1969, 6), new Date(2025, 12)])
+            .range([0, width]);
+
+        const yScale = d3.scaleLinear()
+            .domain([3.5, 7.9])
+            .range([height, 0]);
+
+        const radiusScale = d3.scaleSqrt()
+            .domain([0, d3.max(data, d => d.depth)])
+            .range([0, 30]);
+
+        // Draw data
+        const nodes = data.map(d => ({
+            ...d,
+            x: xScale(new Date(d.date)),
+            y: yScale(d.magnitude),
+            r: radiusScale(d.depth)
+        }));
+
+        const simulation = d3.forceSimulation(nodes)
+            .force("x", d3.forceX(d => xScale(new Date(d.date))).strength(1))
+            .force("y", d3.forceY(d => yScale(d.magnitude)).strength(1))
+            .force("collision", d3.forceCollide(d => d.r + 4.35))
+            .stop();
+
+        for (let i = 0; i < 120; i++) simulation.tick();
+
+        wrapper_bubble.selectAll("circle")
+            .data(nodes)
+            .enter()
+            .append("circle")
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr("r", d => d.r)
+            .attr("fill", d => d3.interpolateRgb("#fdfdfd", "#731a46")(d.depth / d3.max(data, d => d.depth)))
+            .attr("stroke", "#232323")
+            .attr("stroke-width", "1");
+
+        // Draw peripherals
+        wrapper_bubble.append("g")
+            .attr("class", "axis")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(xScale).ticks(6).tickFormat(d3.timeFormat("%Y")));
+
+        wrapper_bubble.append("g")
+            .attr("class", "axis")
+            .call(d3.axisLeft(yScale).ticks(5));
+
+        wrapper_bubble.append("text")
+            .attr("class", "y-axis-label")
+            .attr("x", -height / 2)
+            .attr("y", -50)
+            .attr("transform", "rotate(-90)")
+            .attr("text-anchor", "middle")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .text("Magnitude");
+
+        // Add legend
+        const header = wrapper_bubble.append("g")
+            .attr("transform", `translate(0, -50)`);
+
+        const description = "The critical factors of earthquake magnitude and depth determine their impact. Magnitude reflects the released energy and shaking power, while depth (hypocenter) greatly influences surface shaking intensity and resulting destruction.";
+
+        function wrapText(text, maxWidth) {
+            const words = text.split(" ");
+            const lines = [];
+            let currentLine = [];
+
+            const tempText = wrapper_bubble.append("text")
+                .style("font-size", "23px")
+                .style("font-weight", "300")
+                .attr("visibility", "hidden");
+
+            words.forEach(word => {
+                const testLine = [...currentLine, word].join(" ");
+                tempText.text(testLine);
+                const testWidth = tempText.node().getBBox().width;
+
+                if (testWidth > maxWidth) {
+                    lines.push(currentLine.join(" "));
+                    currentLine = [word];
+                } else {
+                    currentLine.push(word);
+                }
+            });
+
+            if (currentLine.length) {
+                lines.push(currentLine.join(" "));
+            }
+
+            tempText.remove();
+            return lines;
+        }
+        const maxWidth = 1000;
+        const lines = wrapText(description, maxWidth);
+
+        const textHeight = 20;
+        const textBBox = {
+            width: maxWidth,
+            height: lines.length * textHeight
+        };
+
+        lines.forEach((line, i) => {
+            header.append("text")
+                .attr("x", -70)
+                .attr("y", i * textHeight)
+                .attr("text-anchor", "start")
+                .style("font-size", "19px")
+                .style("font-weight", "300")
+                .style("fill", "#232323")
+                .text(line);
+        });
+
+        const legend = header.append("g")
+            .attr("transform", `translate(${maxWidth - 100}, 40)`);
+
+        const legendSizes = [5, 25, 60];
+        const legendRadius = d3.scaleSqrt()
+            .domain([0, d3.max(legendSizes)])
+            .range([0, 30]);
+
+        legend.selectAll("circle")
+            .data(legendSizes)
+            .join("circle")
+            .attr("cx", 0)
+            .attr("cy", d => -legendRadius(d))
+            .attr("r", d => legendRadius(d))
+            .attr("fill", "none")
+            .attr("stroke", "#232323");
+
+        legend.selectAll("line.right")
+            .data(legendSizes)
+            .join("line")
+            .attr("class", "right")
+            .attr("x1", 0)
+            .attr("x2", 50)
+            .attr("y1", d => -2 * legendRadius(d))
+            .attr("y2", d => -2 * legendRadius(d))
+            .attr("stroke", "#232323")
+            .attr("stroke-dasharray", "2,2");
+
+        legend.selectAll("text.right")
+            .data(legendSizes)
+            .join("text")
+            .attr("class", "right")
+            .attr("x", 55)
+            .attr("y", d => -2 * legendRadius(d))
+            .attr("dy", "0.35em")
+            .attr("fill", "#232323")
+            .text(d => `Depth: ${d} km`);
+    </script>
+</body>
+
+</html>
