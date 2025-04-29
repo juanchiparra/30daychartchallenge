@@ -91,3 +91,5 @@ For more information about the challenge, you can visit the [official repository
 ### Day 28
 ![Challenge 28](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V28/diverging.png)
 
+### Day 29
+![Challenge 29](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V29/cloud.png)
