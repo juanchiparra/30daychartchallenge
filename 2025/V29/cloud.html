@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Extraterrestrial</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="cloud.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-cloud/build/d3.layout.cloud.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>Extraterrestrial</h1>
+            <span class="date">April 29, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>Are you sure we are alone?</h2>
+            <p class="description">Among more than 60,000 people in the United States who have confirmed seeing an unidentified flying object, these are the words most often repeated in their testimonies.</p>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a href="https://corgis-edu.github.io/corgis/csv/ufo_sightings/" class="external">CORGIS Project</a></p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra" class="external">@JuanchiParra</a></p>
+            </div>
+        </section>
+    </main>
+    <script type="module">
+        // Import data
+        import { data } from './cloud.js';
+
+        // Add formatting
+        const words = data.slice(0, 100).map(d => ({
+            text: d.description,
+            size: d.count,
+            count: d.count
+        }));
+
+        // Chart dimensions
+        const width = 1100;
+        const height = 550;
+
+        // Draw canvas
+        const svg = d3.select("#container1")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", `translate(${width / 2},${height / 2})`);
+
+        // Create scales
+        const max = d3.max(words, d => d.count);
+        const min = d3.min(words, d => d.count);
+
+        const colorScale = d3.scaleLinear()
+            .domain([min, max]) 
+            .range(["#494949", "#fdfdfd"])
+            .interpolate(d3.interpolateRgb);
+
+        // Draw data
+        const layout = d3.layout.cloud()
+            .size([width, height])
+            .words(words)
+            .padding(5)
+            .rotate(() => (Math.random() > 0.5 ? 0 : 90))
+            .font("sans-serif")
+            .fontSize(d => Math.sqrt(d.size) * 0.6)
+            .on("end", draw);
+
+        layout.start();
+
+        function draw(words) {
+            svg.selectAll("text")
+                .data(words)
+                .enter().append("text")
+                .style("font-size", d => `${d.size}px`)
+                .style("fill", d => colorScale(d.count)) 
+                .attr("text-anchor", "middle")
+                .attr("transform", d => `translate(${d.x},${d.y}) rotate(${d.rotate})`)
+                .text(d => d.text);
+        }
+    </script>
+</body>
+
+</html>
