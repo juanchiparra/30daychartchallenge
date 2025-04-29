@@ -84,3 +84,10 @@ For more information about the challenge, you can visit the [official repository
 
 ### Day 26
 ![Challenge 26](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V26/map.png)
+
+### Day 27
+![Challenge 27](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V27/beeswarm.png)
+
+### Day 28
+![Challenge 28](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V28/diverging.png)
+
