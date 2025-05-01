@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>National Geographic</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="map.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.js"></script>
+</head>
+
+<body>
+    <main>
+        <section class="header">
+            <h1>National Geographic</h1>
+            <span class="date">April 30, 2025</span>
+        </section>
+        <section class="visualization">
+            <h2>Heart disease mortality in U.S. counties <span>(2019-2021)</span></h2>
+            <div id="container1" class="container"></div>
+            <div class="footer">
+                <p><b>Data:</b> <a href="https://catalog.data.gov/dataset/heart-disease-mortality-data-among-us-adults-35-by-state-territory-and-county-2019-2021" class="external">data.gov</a></p>
+                <p><b>Design:</b> <a href="https://github.com/juanchiparra/30daychartchallenge"
+                        class="external">@JuanchiParra</a></p>
+            </div>
+            <div class="tooltip" id="tooltip"></div>
+        </section>
+    </main>
+    <script type="module">
+        // Chart dimensions
+        const width = 1200;
+        const height = 700;
+
+        // Draw canvas
+        const wrapper_map = d3.select("#container1")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("viewBox", [0, 0, width, height]);
+
+        const projection = d3.geoAlbersUsa()
+            .translate([width / 2, height / 1.8])
+            .scale(1300);
+
+        const path = d3.geoPath().projection(projection);
+        const spike = (length, width = 7) => `M${-width / 2},0L0,${-length}L${width / 2},0`;
+        const tooltip = d3.select("#tooltip");
+
+        let colorScale;
+
+        // Access data
+        Promise.all([
+            d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json"),
+            d3.csv("map.csv")
+        ]).then(([us, data]) => {
+            const counties = topojson.feature(us, us.objects.counties);
+
+            const dataMap = new Map();
+            data.forEach(d => {
+                dataMap.set(+d.LocationID, +d.Data_Value);
+            });
+
+            // Create scales
+            const length = d3.scaleLinear()
+                .range([0, 220]);
+            const maxValue = d3.max(data, d => Math.abs(+d.Data_Value));
+            length.domain([0, maxValue]);
+
+            const opacityScale = d3.scaleLinear()
+                .domain([0, 800])
+                .range([0.8, 1]);
+
+            const colorScale = d3.scaleLinear()
+                .domain([0, 800])
+                .range(["#b6e3ca", "#48b97f"]);
+
+            const countyScale = d3.scaleLinear()
+                .domain([0, 800])
+                .range(["#daf1e6", "#c8eada"]);
+
+            // Draw data
+            wrapper_map.append("path")
+                .datum(topojson.feature(us, us.objects.nation))
+                .attr("fill", "#fdfdfd")
+                .attr("d", path);
+
+            wrapper_map.append("g")
+                .selectAll("path")
+                .data(counties.features)
+                .join("path")
+                .attr("d", path)
+                .attr("fill", d => {
+                    const value = dataMap.get(+d.id);
+                    return value ? countyScale(value) : "#edf8f2";
+                })
+
+            wrapper_map.append("path")
+                .datum(topojson.mesh(us, us.objects.nation))
+                .attr("fill", "none")
+                .attr("stroke", "#48b980")
+                .attr("stroke-opacity", 1)
+                .attr("stroke-width", 1)
+                .attr("stroke-linejoin", "round")
+                .attr("d", path);
+
+
+            wrapper_map.append("path")
+                .datum(topojson.mesh(us, us.objects.counties, (a, b) => a !== b))
+                .attr("fill", "none")
+                .attr("stroke", "none")
+                .attr("stroke-opacity", 0.6)
+                .attr("stroke-width", 0.6)
+                .attr("stroke-linejoin", "round")
+                .attr("d", path);
+
+            wrapper_map.append("path")
+                .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
+                .attr("fill", "none")
+                .attr("stroke", "#48b980")
+                .attr("stroke-opacity", 1)
+                .attr("stroke-width", 1)
+                .attr("stroke-linejoin", "round")
+                .attr("d", path);
+
+            wrapper_map.append("g")
+                .selectAll("path")
+                .data(
+                    counties.features
+                        .filter(d => {
+                            const value = dataMap.get(+d.id);
+                            return value > 0;
+                        })
+                        .sort((b, a) => dataMap.get(+b.id) - dataMap.get(+a.id))
+                )
+                .join("path")
+                .attr("transform", d => {
+                    const centroid = path.centroid(d);
+                    if (isNaN(centroid[0]) || isNaN(centroid[1])) {
+                        return `translate(0,0)`;
+                    }
+                    return `translate(${centroid[0]},${centroid[1]})`;
+                })
+                .attr("d", d => spike(length(dataMap.get(+d.id) || 0)))
+                .attr("fill", d => colorScale(dataMap.get(+d.id) || 0))
+                .attr("fill-opacity", d => opacityScale(dataMap.get(+d.id) || 0))
+                .attr("stroke", "#328358")
+                .attr("stroke-opacity", d => opacityScale(dataMap.get(+d.id) || 0))
+                .attr("stroke-width", 0.6)
+                .attr("stroke-linejoin", "round")
+                .on("mouseover", (event, d) => {
+                    const value = dataMap.get(+d.id) || 0;
+                    const countyName = d.properties.name || "Unknown";
+                    tooltip.style("opacity", 1)
+                        .html(`
+                            <b>County:</b> ${countyName}<br>
+                            <b>Rate:</b> ${Math.round(value)} deaths per 100,000 population
+                        `);
+                })
+                .on("mousemove", event => {
+                    tooltip.style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 20) + "px");
+                })
+                .on("mouseout", () => {
+                    tooltip.style("opacity", 0);
+                });
+
+            // Add legend
+            const header = wrapper_map.append("g")
+                .attr("transform", `translate(73, 28)`);
+
+            const description = "Heart disease mortality among adults aged 35 and older varies significantly across counties in the United States, measured as deaths per 100,000 population.";
+
+            function wrapText(text, maxWidth) {
+                const words = text.split(" ");
+                const lines = [];
+                let currentLine = [];
+
+                const tempText = wrapper_map.append("text")
+                    .style("font-size", "19px")
+                    .style("font-weight", "300")
+                    .attr("visibility", "hidden");
+
+                words.forEach(word => {
+                    const testLine = [...currentLine, word].join(" ");
+                    tempText.text(testLine);
+                    const testWidth = tempText.node().getBBox().width;
+
+                    if (testWidth > maxWidth) {
+                        lines.push(currentLine.join(" "));
+                        currentLine = [word];
+                    } else {
+                        currentLine.push(word);
+                    }
+                });
+
+                if (currentLine.length) {
+                    lines.push(currentLine.join(" "));
+                }
+
+                tempText.remove();
+                return lines;
+            }
+
+            const maxWidth = 980;
+            const lines = wrapText(description, maxWidth);
+
+            const textHeight = 20;
+            const textBBox = {
+                width: maxWidth,
+                height: lines.length * textHeight
+            };
+
+            lines.forEach((line, i) => {
+                header.append("text")
+                    .attr("x", -70)
+                    .attr("y", i * textHeight)
+                    .attr("text-anchor", "start")
+                    .style("font-size", "19px")
+                    .style("font-weight", "300")
+                    .style("fill", "#232323")
+                    .text(line);
+            });
+
+            const legend = header.append("g")
+                .attr("transform", `translate(${maxWidth - 80}, 30)`);
+
+
+            const legendData = [
+                { label: "200", value: 200 },
+                { label: "400", value: 400 },
+                { label: "600", value: 600 },
+                { label: "800", value: 800 }
+            ];
+
+            legend.selectAll("path")
+                .data(legendData)
+                .join("path")
+                .attr("d", d => spike(length(d.value)))
+                .attr("fill", d => colorScale(dataMap.get(+d.id) || 0))
+                .attr("fill-opacity", d => opacityScale(dataMap.get(+d.id) || 0))
+                .attr("stroke", "#328358")
+                .attr("stroke-opacity", d => opacityScale(dataMap.get(+d.id) || 0))
+                .attr("transform", (d, i) => `translate(${i * 40}, 0)`);
+
+            legend.selectAll("text")
+                .data(legendData)
+                .join("text")
+                .attr("x", (d, i) => i * 40 - 10)
+                .attr("y", 10)
+                .text(d => d.label)
+                .attr("font-size", "12px")
+                .attr("fill", "#1d4c33")
+                .attr("font-weight", "500")
+                .attr("alignment-baseline", "middle");
+        })
+    </script>
+</body>
+
+</html>
