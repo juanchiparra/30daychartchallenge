@@ -93,3 +93,6 @@ For more information about the challenge, you can visit the [official repository
 
 ### Day 29
 ![Challenge 29](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V29/cloud.png)
+
+### Day 30
+![Challenge 30](https://github.com/juanchiparra/30daychartchallenge/blob/main/2025/V30/map.png)
